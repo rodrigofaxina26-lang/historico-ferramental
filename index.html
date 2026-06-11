@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro metal | Histórico Ferramental</title>
+  <link rel="icon" type="image/png" href="./logo.png">
+  <style>
+    :root {
+      --bg: #f4f6f9; --panel: #ffffff; --border: #dce3ec; --border-strong: #c4cfe0;
+      --text: #1c2a3a; --muted: #5c6e85; --accent: #1857b8; --accent-dark: #0e459e;
+      --accent-light: rgba(24,87,184,0.08); --ok: #0f7c52; --ok-bg: rgba(15,124,82,0.09);
+      --warn: #8f6600; --warn-bg: rgba(143,102,0,0.09); --danger: #b52a2a;
+      --danger-bg: rgba(181,42,42,0.09); --info: #1d5e9e; --info-bg: rgba(29,94,158,0.09);
+      --shadow: 0 1px 4px rgba(0,0,0,0.06),0 4px 18px rgba(0,0,0,0.09);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --radius: 12px; --radius-sm: 8px;
+      --radius-lg: 16px; --sig-bg: #f9fbfc; --sig-stroke: #1857b8;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;min-height:100vh;font-family:"Segoe UI","Bahnschrift",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;}
+    .page{width:min(1320px,calc(100% - 32px));margin:0 auto;padding:20px 0 48px;}
+
+    /* HEADER */
+    .hero{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px 24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:20px;}
+    .brand{display:flex;gap:16px;align-items:center;flex:1;min-width:220px;}
+    .brand-logo-frame{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 12px;box-shadow:var(--shadow-sm);}
+    .brand-logo{display:block;width:110px;height:auto;}
+    .brand-text{display:grid;gap:3px;}
+    .eyebrow{margin:0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.18em;color:var(--accent);font-weight:600;}
+    h1{margin:0;font-size:clamp(1.2rem,2.5vw,1.7rem);color:var(--text);line-height:1.2;}
+    .hero-desc{margin:0;color:var(--muted);font-size:0.85rem;}
+    .hero-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+    .chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 11px;font-size:0.75rem;background:var(--accent-light);border:1px solid rgba(24,87,184,0.18);color:var(--accent);}
+    .chip.ok{background:var(--ok-bg);border-color:rgba(15,124,82,0.2);color:var(--ok);}
+    .chip.warn{background:var(--warn-bg);border-color:rgba(143,102,0,0.2);color:var(--warn);}
+
+    /* NAV TABS */
+    .nav-tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid var(--border);padding-bottom:0;}
+    .nav-tab{border:0;border-radius:8px 8px 0 0;padding:11px 22px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.92rem;font-weight:600;transition:color 140ms,background 140ms;position:relative;top:2px;}
+    .nav-tab:hover{color:var(--accent);background:var(--accent-light);}
+    .nav-tab.is-active{color:var(--accent);background:var(--panel);border:2px solid var(--border);border-bottom-color:var(--panel);}
+    .tab-view{display:none;} .tab-view.is-active{display:block;}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+    .stat-card{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:#fff;display:grid;gap:2px;}
+    .stat-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);}
+    .stat-value{font-size:2rem;font-weight:700;line-height:1;}
+    .stat-note{font-size:0.76rem;color:var(--muted);margin-top:2px;}
+    .c-accent{color:var(--accent);} .c-ok{color:var(--ok);} .c-warn{color:var(--warn);} .c-danger{color:var(--danger);}
+
+    /* PANELS */
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:22px;}
+    .panel-title{margin:0 0 4px;font-size:1.1rem;color:var(--text);}
+    .panel-desc{margin:0 0 16px;font-size:0.84rem;color:var(--muted);}
+
+    /* TOOLBAR */
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:16px;align-items:center;}
+    .toolbar-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+    /* BUTTONS */
+    .btn{border:0;border-radius:var(--radius-sm);padding:9px 16px;cursor:pointer;transition:filter 130ms,transform 110ms;font-size:0.86rem;font-weight:600;font-family:inherit;}
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05);}
+    .btn:disabled{cursor:not-allowed;opacity:.5;transform:none;filter:none;}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(24,87,184,0.28);}
+    .btn-primary:hover{background:var(--accent-dark);}
+    .btn-ok{background:var(--ok);color:#fff;}
+    .btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border-strong);}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(181,42,42,.2);}
+    .btn-sm{padding:6px 12px;font-size:0.8rem;}
+
+    /* FORM */
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .form-grid.g3{grid-template-columns:repeat(3,1fr);}
+    .form-grid.g4{grid-template-columns:repeat(4,1fr);}
+    .field{display:grid;gap:4px;} .field-full{display:grid;gap:4px;grid-column:1/-1;}
+    label{font-size:0.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+    input,select,textarea,button{font:inherit;}
+    input,select,textarea{width:100%;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:#fff;color:var(--text);padding:9px 11px;outline:none;transition:border-color 130ms,box-shadow 130ms;}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,87,184,0.12);}
+    textarea{min-height:100px;resize:vertical;line-height:28px;padding:4px 11px;background-image:repeating-linear-gradient(transparent 0px,transparent 27px,#dce8f4 27px,#dce8f4 28px);background-position:0 4px;background-attachment:local;}
+    .form-step{margin-bottom:20px;}
+    .step-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent-light);}
+    .step-number{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:0.75rem;font-weight:700;flex-shrink:0;}
+    .step-title{margin:0;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);font-weight:700;}
+    .form-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--border);margin-top:6px;}
+
+    /* CARDS */
+    .card-list{display:grid;gap:14px;}
+    .tool-card{border:1px solid var(--border);border-radius:var(--radius);background:#fff;overflow:hidden;}
+    .tool-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:#fafbfc;}
+    .tool-head-info h3{margin:0;font-size:0.98rem;color:var(--text);}
+    .tool-head-meta{font-size:0.8rem;color:var(--muted);margin-top:1px;}
+    .tool-body{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+    .tool-body dl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin:0;font-size:0.82rem;}
+    .tool-body dt{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:1px;}
+    .tool-body dd{margin:0;color:var(--text);font-weight:500;}
+    .tool-foot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-top:1px solid var(--border);background:#fafbfc;}
+
+    /* CYCLE CARDS */
+    .cycle-card{border:1px solid var(--border);border-radius:var(--radius);background:#fff;overflow:hidden;margin-bottom:12px;}
+    .cycle-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:#fafbfc;}
+    .cycle-title{margin:0;font-size:0.92rem;color:var(--text);}
+    .cycle-meta{font-size:0.78rem;color:var(--muted);}
+    .cycle-body{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 16px;}
+    .cycle-section{display:grid;gap:8px;}
+    .cycle-section-title{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);font-weight:700;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;}
+    .kv{display:grid;gap:1px;font-size:0.82rem;}
+    .kv dt{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);}
+    .kv dd{margin:0;font-weight:500;}
+    .parecer-box{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:0.82rem;grid-column:1/-1;}
+    .parecer-box.prod{border-left:3px solid var(--warn);}
+    .parecer-box.qual{border-left:3px solid var(--accent);}
+    .parecer-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+    .cycle-foot{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:#fafbfc;}
+
+    /* SIGNATURES */
+    .sig-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .sig-card{border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px;background:#fff;display:grid;gap:5px;}
+    .sig-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);font-weight:700;}
+    .sig-owner{font-size:0.78rem;color:var(--muted);}
+    .sig-meta{font-size:0.72rem;color:var(--muted);}
+    .signature-section{border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:#fafcfe;display:grid;gap:10px;}
+    .sig-section-title{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:0 0 2px;}
+    .sig-date-local{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+    /* BADGES */
+    .badge{display:inline-flex;align-items:center;border-radius:999px;padding:3px 11px;font-size:0.75rem;font-weight:600;border:1px solid transparent;}
+    .badge-em-producao{background:var(--info-bg);color:var(--info);border-color:rgba(29,94,158,.2);}
+    .badge-aguardando{background:var(--warn-bg);color:var(--warn);border-color:rgba(143,102,0,.2);}
+    .badge-em-manutencao{background:var(--danger-bg);color:var(--danger);border-color:rgba(181,42,42,.2);}
+    .badge-disponivel{background:var(--ok-bg);color:var(--ok);border-color:rgba(15,124,82,.2);}
+    .badge-concluido{background:var(--ok-bg);color:var(--ok);border-color:rgba(15,124,82,.2);}
+    .badge-alta{background:var(--danger-bg);color:var(--danger);border-color:rgba(181,42,42,.2);}
+    .badge-media{background:var(--warn-bg);color:var(--warn);border-color:rgba(143,102,0,.2);}
+    .badge-baixa{background:var(--ok-bg);color:var(--ok);border-color:rgba(15,124,82,.2);}
+
+    /* STATUS INLINE */
+    .status-inline{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:0.72rem;font-weight:600;border:1px solid transparent;}
+    .status-inline[data-tone="ok"]{background:var(--ok-bg);color:var(--ok);}
+    .status-inline[data-tone="warn"]{background:var(--warn-bg);color:var(--warn);}
+    .status-inline[data-tone="danger"]{background:var(--danger-bg);color:var(--danger);}
+    .status-inline[data-tone="info"]{background:var(--info-bg);color:var(--info);}
+
+    /* MODAL */
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.42);z-index:100;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;}
+    .modal-backdrop.is-open{display:flex;}
+    .modal{background:var(--panel);border-radius:var(--radius-lg);box-shadow:0 8px 40px rgba(0,0,0,0.22);padding:24px;width:min(680px,100%);margin:auto;}
+    .modal.modal-lg{width:min(860px,100%);}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+    .modal-title{margin:0;font-size:1.1rem;}
+    .modal-close{background:none;border:0;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:6px;}
+    .modal-close:hover{color:var(--text);background:var(--accent-light);}
+
+    /* EMAIL SETTINGS */
+    .email-details{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+    .email-details summary{padding:10px 14px;cursor:pointer;background:#f8fafc;font-size:0.83rem;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;align-items:center;list-style:none;}
+    .email-details summary::-webkit-details-marker{display:none;}
+    .email-details[open] summary{border-bottom:1px solid var(--border);}
+    .email-body{padding:14px;display:grid;gap:12px;}
+
+    /* EMPTY */
+    .empty-state{padding:28px;border:1px dashed var(--border-strong);border-radius:var(--radius);text-align:center;color:var(--muted);line-height:1.7;}
+
+    /* HELPER */
+    .helper{font-size:0.8rem;color:var(--muted);}
+    .helper[data-tone="ok"]{color:var(--ok);}
+    .helper[data-tone="warn"]{color:var(--warn);}
+    .helper[data-tone="danger"]{color:var(--danger);}
+    .helper[data-tone="info"]{color:var(--info);}
+    .checkbox-inline{display:flex;align-items:center;gap:8px;}
+    .checkbox-inline input{width:auto;}
+    .alert-box{border-radius:var(--radius-sm);padding:10px 14px;font-size:0.83rem;line-height:1.5;}
+    .alert-warn{background:var(--warn-bg);color:var(--warn);border:1px solid rgba(143,102,0,.2);}
+    .divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+    /* PRINT */
+    @page{size:A4;margin:12mm;}
+    @media print{
+      body{background:#fff;}
+      .hero,.nav-tabs,.toolbar,.tool-foot,.cycle-foot .toolbar-group,.email-details,.modal-backdrop{display:none!important;}
+      .page{width:auto;padding:0;}
+      .tool-card,.cycle-card{break-inside:avoid;}
+      .panel{box-shadow:none!important;border-color:#ccc!important;}
+    }
+    @media(max-width:900px){
+      .stats{grid-template-columns:repeat(2,1fr);}
+      .cycle-body{grid-template-columns:1fr;}
+      .tool-body{grid-template-columns:1fr;}
+    }
+    @media(max-width:600px){
+      .page{width:calc(100% - 16px);padding-top:12px;}
+      .hero{flex-direction:column;}
+      .form-grid,.form-grid.g3,.form-grid.g4,.sig-grid,.sig-date-local{grid-template-columns:1fr;}
+      .stats{grid-template-columns:1fr 1fr;}
+      .nav-tab{padding:9px 14px;font-size:0.82rem;}
+    }
+  </style>
+</head>
+<body>
+<main class="page">
+
+  <!-- HEADER -->
+  <header class="hero">
+    <div class="brand">
+      <div class="brand-logo-frame">
+        <img class="brand-logo" src="./logo.png" alt="Logo Pro metal">
+      </div>
+      <div class="brand-text">
+        <p class="eyebrow">Controle interno · Pro metal</p>
+        <h1>Histórico Ferramental</h1>
+        <p class="hero-desc">Gestão de ferramentas · Assinatura digital na saída · E-mails automáticos</p>
+        <div class="hero-chips">
+          <span class="chip">Gestão de ferramentas</span>
+          <span class="chip">Assinatura na saída</span>
+          <span class="chip ok">E-mail automático</span>
+          <span class="chip">Impressão PDF</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff4e0;border:1px solid rgba(143,102,0,.3);border-radius:var(--radius);padding:12px 16px;max-width:380px;font-size:0.8rem;color:var(--warn);line-height:1.5;">
+      <strong>Plano de Reação:</strong> Para ocorrência de falta ou quebra de componente — parar produção, segregar o lote e comunicar imediatamente Ferramentaria, Produção e Qualidade.
+    </div>
+  </header>
+
+  <!-- EMAIL SETTINGS (sempre visível) -->
+  <details class="email-details" id="emailDetailsEl">
+    <summary>
+      Configurações de e-mail automático (disparado na saída da ferramenta)
+      <span class="status-inline" id="emailConfigStatus" data-tone="info">Não configurado</span>
+    </summary>
+    <div class="email-body">
+      <p class="helper">Quando ativado, envia e-mail automaticamente para as áreas interessadas ao registrar a <strong>saída</strong> da ferramenta (requer conta no EmailJS).</p>
+      <label class="checkbox-inline">
+        <input type="checkbox" id="emailEnabled">
+        Ativar envio automático de e-mails na saída
+      </label>
+      <div class="form-grid g3">
+        <div class="field field-full">
+          <label for="emailRecipients">E-mails destino (separados por vírgula)</label>
+          <input id="emailRecipients" type="text" placeholder="qualidade@empresa.com, ferramentaria@empresa.com, producao@empresa.com">
+        </div>
+        <div class="field">
+          <label for="emailPublicKey">EmailJS Public Key</label>
+          <input id="emailPublicKey" type="text" placeholder="Public Key">
+        </div>
+        <div class="field">
+          <label for="emailServiceId">EmailJS Service ID</label>
+          <input id="emailServiceId" type="text" placeholder="Service ID">
+        </div>
+        <div class="field">
+          <label for="emailTemplateId">EmailJS Template ID</label>
+          <input id="emailTemplateId" type="text" placeholder="Template ID">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost btn-sm" id="saveEmailSettingsBtn">Salvar configuração</button>
+        <span class="helper" id="emailSendStatus">E-mails automáticos desativados.</span>
+      </div>
+    </div>
+  </details>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab is-active" data-nav="ferramentas">Gestão de Ferramentas</button>
+    <button class="nav-tab" data-nav="historico">Histórico de Uso</button>
+  </div>
+
+  <!-- ═══ TAB: FERRAMENTAS ═══ -->
+  <div class="tab-view is-active" id="view-ferramentas">
+    <div class="stats" id="toolStats">
+      <article class="stat-card">
+        <span class="stat-label">Total de ferramentas</span>
+        <strong class="stat-value c-accent" id="statTotalTools">0</strong>
+        <span class="stat-note">Cadastradas no sistema.</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Em produção</span>
+        <strong class="stat-value c-accent" id="statEmProducao">0</strong>
+        <span class="stat-note">Com entrada registrada.</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Aguard. Ferramentaria</span>
+        <strong class="stat-value c-warn" id="statAguardando">0</strong>
+        <span class="stat-note">Saíram, aguardam análise.</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Disponíveis</span>
+        <strong class="stat-value c-ok" id="statDisponiveis">0</strong>
+        <span class="stat-note">Prontas para produção.</span>
+      </article>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <input type="search" id="toolSearch" style="min-width:240px" placeholder="Buscar por nº, cliente, produto, código…">
+      </div>
+      <div class="toolbar-group">
+        <button type="button" class="btn btn-ghost btn-sm" id="printToolsBtn">Imprimir / PDF</button>
+        <button type="button" class="btn btn-primary" id="openNewToolBtn">+ Nova Ferramenta</button>
+      </div>
+    </div>
+
+    <div class="card-list" id="toolList">
+      <div class="empty-state">Nenhuma ferramenta cadastrada.<br>Clique em <strong>+ Nova Ferramenta</strong> para começar.</div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: HISTÓRICO ═══ -->
+  <div class="tab-view" id="view-historico">
+    <div class="toolbar" style="margin-bottom:18px;">
+      <div class="toolbar-group">
+        <select id="histToolFilter" style="min-width:280px">
+          <option value="">Todas as ferramentas</option>
+        </select>
+        <select id="histStatusFilter">
+          <option value="">Todos os status</option>
+          <option value="Em Produção">Em Produção</option>
+          <option value="Aguardando Ferramentaria">Aguardando Ferramentaria</option>
+          <option value="Em Manutenção">Em Manutenção</option>
+          <option value="Concluído">Concluído</option>
+        </select>
+      </div>
+      <div class="toolbar-group">
+        <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">Exportar JSON</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="importBtn">Importar JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+        <button type="button" class="btn btn-ghost btn-sm" id="printHistBtn">Imprimir / PDF</button>
+      </div>
+    </div>
+    <div id="histList">
+      <div class="empty-state">Nenhum registro encontrado.<br>Cadastre uma ferramenta e registre uma entrada.</div>
+    </div>
+  </div>
+
+  <p style="margin-top:20px;text-align:center;font-size:0.8rem;color:var(--muted);">Pro metal · Histórico Ferramental · Dados salvos no navegador (localStorage)</p>
+</main>
+
+<!-- ═══ MODAL: NOVA / EDITAR FERRAMENTA ═══ -->
+<div class="modal-backdrop" id="modalTool">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalToolTitle">Nova Ferramenta</h2>
+      <button class="modal-close" data-close="modalTool">✕</button>
+    </div>
+    <form id="formTool">
+      <input type="hidden" id="fToolId">
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">1</span><h3 class="step-title">Identificação da Ferramenta</h3></div>
+        <div class="form-grid g3" style="margin-bottom:12px;">
+          <div class="field">
+            <label for="fNumFerramenta">Nº da Ferramenta *</label>
+            <input id="fNumFerramenta" type="text" placeholder="Ex.: MFIM0174X" required>
+          </div>
+          <div class="field">
+            <label for="fCC">C.C. (Centro de Custo)</label>
+            <input id="fCC" type="text" placeholder="Ex.: 1050">
+          </div>
+          <div class="field">
+            <label for="fCodigoPrometal">Código PROMETAL</label>
+            <input id="fCodigoPrometal" type="text" placeholder="Ex.: FRM-0042">
+          </div>
+          <div class="field">
+            <label for="fCliente">Cliente</label>
+            <input id="fCliente" type="text" placeholder="Nome do cliente">
+          </div>
+          <div class="field field-full">
+            <label for="fDescOperacao">Descrição da Operação</label>
+            <input id="fDescOperacao" type="text" placeholder="Ex.: Injeção plástica tampa vedação">
+          </div>
+          <div class="field">
+            <label for="fNumOP">Nº OP.</label>
+            <input id="fNumOP" type="text" placeholder="Ex.: OP-7845">
+          </div>
+          <div class="field field-full">
+            <label for="fDescProduto">Descrição do Produto</label>
+            <input id="fDescProduto" type="text" placeholder="Ex.: Tampa de vedação 24A">
+          </div>
+          <div class="field">
+            <label for="fCodProdCliente">Cód. do Prod. Cliente</label>
+            <input id="fCodProdCliente" type="text" placeholder="Ex.: PCA-8801">
+          </div>
+          <div class="field">
+            <label for="fStatusFerramenta">Status da ferramenta</label>
+            <select id="fStatusFerramenta">
+              <option value="Disponível">Disponível</option>
+              <option value="Em Produção">Em Produção</option>
+              <option value="Em Manutenção">Em Manutenção</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="saveToolBtn">Salvar ferramenta</button>
+        <button type="button" class="btn btn-ghost" data-close="modalTool">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: NOVA ENTRADA ═══ -->
+<div class="modal-backdrop" id="modalEntrada">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Registrar Entrada na Produção</h2>
+      <button class="modal-close" data-close="modalEntrada">✕</button>
+    </div>
+    <p class="helper" id="entradaToolInfo" style="margin:0 0 16px;padding:8px 12px;background:var(--accent-light);border-radius:var(--radius-sm);">Ferramenta: —</p>
+    <form id="formEntrada">
+      <input type="hidden" id="eToolId">
+      <div class="form-grid g3">
+        <div class="field">
+          <label for="eDataEntrada">Data e hora de entrada *</label>
+          <input id="eDataEntrada" type="datetime-local" required>
+        </div>
+        <div class="field">
+          <label for="ePreparador">Preparador *</label>
+          <input id="ePreparador" type="text" placeholder="Nome do preparador" required>
+        </div>
+        <div class="field">
+          <label for="eMaquina">Nº Máquina *</label>
+          <input id="eMaquina" type="text" placeholder="Ex.: Injetora 03" required>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:16px;">
+        <button type="submit" class="btn btn-primary">Registrar entrada</button>
+        <button type="button" class="btn btn-ghost" data-close="modalEntrada">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: REGISTRAR SAÍDA ═══ -->
+<div class="modal-backdrop" id="modalSaida">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Registrar Saída da Produção</h2>
+      <button class="modal-close" data-close="modalSaida">✕</button>
+    </div>
+    <p class="helper" id="saidaToolInfo" style="margin:0 0 16px;padding:8px 12px;background:var(--warn-bg);border-radius:var(--radius-sm);color:var(--warn);border:1px solid rgba(143,102,0,.2);">
+      ⚠ Ao salvar, o histórico será assinado e e-mails automáticos serão disparados para as áreas interessadas.
+    </p>
+    <form id="formSaida">
+      <input type="hidden" id="sCycleId">
+
+      <!-- SAÍDA -->
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">1</span><h3 class="step-title">Dados da Saída</h3></div>
+        <div class="form-grid g4">
+          <div class="field">
+            <label for="sDataSaida">Data e hora da saída *</label>
+            <input id="sDataSaida" type="datetime-local" required>
+          </div>
+          <div class="field">
+            <label for="sPreparadorSaida">Preparador *</label>
+            <input id="sPreparadorSaida" type="text" placeholder="Nome do preparador" required>
+          </div>
+          <div class="field">
+            <label for="sQtdeProduzidas">Qtde. Peças Produzidas</label>
+            <input id="sQtdeProduzidas" type="number" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label for="sQtdeAcumulada">Qtde. Peças Acumulada</label>
+            <input id="sQtdeAcumulada" type="number" min="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- PARECER PRODUÇÃO -->
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">2</span><h3 class="step-title">Parecer da Produção</h3></div>
+        <div class="form-grid">
+          <div class="field field-full">
+            <label for="sParecerProducao">Parecer da Produção *</label>
+            <textarea id="sParecerProducao" placeholder="Descreva a ocorrência ou situação observada durante a produção…" required></textarea>
+          </div>
+          <div class="field">
+            <label for="sDataParecerProducao">Data do parecer</label>
+            <input id="sDataParecerProducao" type="date">
+          </div>
+          <div class="field">
+            <label for="sResponsavelProducao">Responsável Produção *</label>
+            <input id="sResponsavelProducao" type="text" placeholder="Nome do responsável" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- PARECER QUALIDADE -->
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">3</span><h3 class="step-title">Parecer da Qualidade</h3></div>
+        <div class="form-grid">
+          <div class="field field-full">
+            <label for="sParecerQualidade">Parecer da Qualidade *</label>
+            <textarea id="sParecerQualidade" placeholder="Descrição do defeito, impacto no produto e ação requerida da ferramentaria…" required></textarea>
+          </div>
+          <div class="field">
+            <label for="sDataParecerQualidade">Data do parecer</label>
+            <input id="sDataParecerQualidade" type="date">
+          </div>
+          <div class="field">
+            <label for="sResponsavelQualidade">Responsável Qualidade *</label>
+            <input id="sResponsavelQualidade" type="text" placeholder="Nome do inspetor" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSINATURAS -->
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">4</span><h3 class="step-title">Assinaturas (obrigatórias para liberar e-mails)</h3></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <!-- Assinatura Produção -->
+          <div class="signature-section">
+            <p class="sig-section-title">Assinatura — Produção</p>
+            <div class="field">
+              <label for="sNomeSigProducao">Nome de quem assina *</label>
+              <input id="sNomeSigProducao" type="text" placeholder="Nome completo" required>
+            </div>
+            <div class="sig-date-local">
+              <div class="field">
+                <label for="sDataSigProducao">Data</label>
+                <input id="sDataSigProducao" type="date">
+              </div>
+              <div class="field">
+                <label for="sLocalSigProducao">Local</label>
+                <input id="sLocalSigProducao" type="text" placeholder="Ex.: São Paulo, SP">
+              </div>
+            </div>
+          </div>
+          <!-- Assinatura Qualidade -->
+          <div class="signature-section">
+            <p class="sig-section-title">Assinatura — Qualidade</p>
+            <div class="field">
+              <label for="sNomeSigQualidade">Nome de quem assina *</label>
+              <input id="sNomeSigQualidade" type="text" placeholder="Nome completo" required>
+            </div>
+            <div class="sig-date-local">
+              <div class="field">
+                <label for="sDataSigQualidade">Data</label>
+                <input id="sDataSigQualidade" type="date">
+              </div>
+              <div class="field">
+                <label for="sLocalSigQualidade">Local</label>
+                <input id="sLocalSigQualidade" type="text" placeholder="Ex.: São Paulo, SP">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-ok" id="saveSaidaBtn">Salvar saída e disparar e-mails</button>
+        <button type="button" class="btn btn-ghost" data-close="modalSaida">Cancelar</button>
+        <span class="helper" id="saidaEmailStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STORAGE_TOOLS = "pm-ferramentas-v2";
+const STORAGE_CYCLES = "pm-ciclos-v2";
+const STORAGE_EMAIL = "pm-email-v2";
+const EMAIL_API = "https://api.emailjs.com/api/v1.0/email/send";
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+let tools = loadJSON(STORAGE_TOOLS, []);
+let cycles = loadJSON(STORAGE_CYCLES, []);
+let emailCfg = loadJSON(STORAGE_EMAIL, {enabled:false,recipients:"",publicKey:"",serviceId:"",templateId:""});
+
+function loadJSON(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function saveAll() { saveJSON(STORAGE_TOOLS, tools); saveJSON(STORAGE_CYCLES, cycles); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ── DATE ─────────────────────────────────────────────────────────────────────
+function dtLocal(date) {
+  const d = new Date(date.getTime() - date.getTimezoneOffset()*60000);
+  return d.toISOString().slice(0,16);
+}
+function dateLocal(date) {
+  const d = new Date(date.getTime() - date.getTimezoneOffset()*60000);
+  return d.toISOString().slice(0,10);
+}
+function fmtDT(v) {
+  if (!v) return "—";
+  const d = new Date(v); if (isNaN(d)) return v;
+  return new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(d);
+}
+function fmtD(v) {
+  if (!v) return "—";
+  const d = new Date(v+"T00:00:00"); if (isNaN(d)) return v;
+  return new Intl.DateTimeFormat("pt-BR",{dateStyle:"short"}).format(d);
+}
+
+// ── EMAIL ─────────────────────────────────────────────────────────────────────
+function parseEmails(s) { return String(s||"").split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean); }
+
+function applyEmailFormFromCfg(c) {
+  document.getElementById("emailEnabled").checked = !!c.enabled;
+  document.getElementById("emailRecipients").value = c.recipients||"";
+  document.getElementById("emailPublicKey").value = c.publicKey||"";
+  document.getElementById("emailServiceId").value = c.serviceId||"";
+  document.getElementById("emailTemplateId").value = c.templateId||"";
+}
+function getEmailFormValues() {
+  return {
+    enabled: document.getElementById("emailEnabled").checked,
+    recipients: document.getElementById("emailRecipients").value.trim(),
+    publicKey: document.getElementById("emailPublicKey").value.trim(),
+    serviceId: document.getElementById("emailServiceId").value.trim(),
+    templateId: document.getElementById("emailTemplateId").value.trim()
+  };
+}
+function emailCfgValid(c) {
+  if (!c.enabled) return "";
+  if (!parseEmails(c.recipients).length) return "Informe ao menos um e-mail destino.";
+  if (!c.publicKey) return "Informe a Public Key do EmailJS.";
+  if (!c.serviceId) return "Informe o Service ID do EmailJS.";
+  if (!c.templateId) return "Informe o Template ID do EmailJS.";
+  return "";
+}
+function updateEmailConfigUi(c) {
+  const el = document.getElementById("emailConfigStatus");
+  if (!c.enabled) { el.textContent="Desativado"; el.dataset.tone="info"; return; }
+  const msg = emailCfgValid(c);
+  if (msg) { el.textContent="Configuração incompleta"; el.dataset.tone="warn"; return; }
+  const n = parseEmails(c.recipients).length;
+  el.textContent = n+" destinatário(s)"; el.dataset.tone="ok";
+}
+function setEmailSendStatus(msg, tone) {
+  const el = document.getElementById("emailSendStatus");
+  el.textContent = msg; el.dataset.tone = tone;
+}
+
+function buildEmailBody(tool, cycle) {
+  return [
+    "HISTÓRICO FERRAMENTAL — SAÍDA DA FERRAMENTA",
+    "─────────────────────────────────────────────",
+    "FERRAMENTA",
+    "  Nº Ferramenta: "+(tool.numFerramenta||"—"),
+    "  Código PROMETAL: "+(tool.codigoPrometal||"—"),
+    "  C.C.: "+(tool.cc||"—"),
+    "  Cliente: "+(tool.cliente||"—"),
+    "  Descrição da Operação: "+(tool.descOperacao||"—"),
+    "  Nº OP.: "+(tool.numOP||"—"),
+    "  Descrição do Produto: "+(tool.descProduto||"—"),
+    "  Cód. Prod. Cliente: "+(tool.codProdCliente||"—"),
+    "",
+    "CICLO Nº "+cycle.item,
+    "  Entrada: "+fmtDT(cycle.entradaData)+" — Preparador: "+(cycle.entradaPreparador||"—")+" — Máquina: "+(cycle.entradaMaquina||"—"),
+    "  Saída: "+fmtDT(cycle.saidaData)+" — Preparador: "+(cycle.saidaPreparador||"—"),
+    "  Peças produzidas: "+(cycle.qtdeProduzidas||"—")+" / Acumulada: "+(cycle.qtdeAcumulada||"—"),
+    "",
+    "PARECER DA PRODUÇÃO ("+fmtD(cycle.dataParecerProducao)+" — "+(cycle.respProducao||"—")+")",
+    "  "+(cycle.parecerProducao||"—"),
+    "",
+    "PARECER DA QUALIDADE ("+fmtD(cycle.dataParecerQualidade)+" — "+(cycle.respQualidade||"—")+")",
+    "  "+(cycle.parecerQualidade||"—"),
+  ].join("\n");
+}
+
+async function sendEmails(tool, cycle) {
+  const cfg = emailCfg;
+  if (!cfg.enabled) return {status:"disabled"};
+  const msg = emailCfgValid(cfg);
+  if (msg) return {status:"invalid", message:msg};
+  const recipients = parseEmails(cfg.recipients);
+  const subject = "SAÍDA — "+tool.numFerramenta+" | "+tool.descProduto;
+  const body = buildEmailBody(tool, cycle);
+  for (let i=0; i<recipients.length; i++) {
+    const res = await fetch(EMAIL_API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        service_id: cfg.serviceId,
+        template_id: cfg.templateId,
+        user_id: cfg.publicKey,
+        template_params: {
+          to_email: recipients[i], subject,
+          num_ferramenta: tool.numFerramenta||"—",
+          codigo_prometal: tool.codigoPrometal||"—",
+          cc: tool.cc||"—",
+          cliente: tool.cliente||"—",
+          desc_operacao: tool.descOperacao||"—",
+          num_op: tool.numOP||"—",
+          desc_produto: tool.descProduto||"—",
+          cod_prod_cliente: tool.codProdCliente||"—",
+          item: cycle.item||"—",
+          entrada_data: fmtDT(cycle.entradaData),
+          entrada_preparador: cycle.entradaPreparador||"—",
+          entrada_maquina: cycle.entradaMaquina||"—",
+          saida_data: fmtDT(cycle.saidaData),
+          saida_preparador: cycle.saidaPreparador||"—",
+          qtde_produzidas: cycle.qtdeProduzidas||"0",
+          qtde_acumulada: cycle.qtdeAcumulada||"0",
+          parecer_producao: cycle.parecerProducao||"—",
+          resp_producao: cycle.respProducao||"—",
+          parecer_qualidade: cycle.parecerQualidade||"—",
+          resp_qualidade: cycle.respQualidade||"—",
+          message: body
+        }
+      })
+    });
+    if (!res.ok) { const t = (await res.text()).trim(); throw new Error(t||"Falha ao enviar e-mail."); }
+    if (i < recipients.length-1) await new Promise(r => setTimeout(r, 1100));
+  }
+  return {status:"sent", count:recipients.length};
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add("is-open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("is-open"); }
+
+document.querySelectorAll("[data-close]").forEach(btn => {
+  btn.addEventListener("click", () => closeModal(btn.dataset.close));
+});
+document.querySelectorAll(".modal-backdrop").forEach(bd => {
+  bd.addEventListener("click", e => { if (e.target === bd) closeModal(bd.id); });
+});
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+document.querySelectorAll(".nav-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("is-active"));
+    document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("is-active"));
+    tab.classList.add("is-active");
+    document.getElementById("view-"+tab.dataset.nav).classList.add("is-active");
+    if (tab.dataset.nav === "historico") renderHistList();
+  });
+});
+
+// ── TOOL STATUS ───────────────────────────────────────────────────────────────
+function getToolCurrentStatus(tool) {
+  const tc = cycles.filter(c => c.toolId === tool.id);
+  const open = tc.find(c => !c.saidaData);
+  if (open) return "Em Produção";
+  if (!tc.length) return tool.status || "Disponível";
+  const last = tc.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
+  if (last.liberado) return tool.status || "Disponível";
+  return "Aguardando Ferramentaria";
+}
+
+function liberarFerramenta(toolId) {
+  const tc = cycles.filter(c => c.toolId === toolId);
+  if (!tc.length) return;
+  const last = tc.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
+  last.liberado = true;
+  saveAll(); renderToolList(); renderHistList();
+}
+
+function statusBadgeClass(s) {
+  const map = {
+    "Em Produção":"badge-em-producao",
+    "Aguardando Ferramentaria":"badge-aguardando",
+    "Em Manutenção":"badge-em-manutencao",
+    "Disponível":"badge-disponivel",
+    "Concluído":"badge-concluido"
+  };
+  return map[s] || "badge-disponivel";
+}
+
+// ── TOOL STATS ────────────────────────────────────────────────────────────────
+function renderToolStats() {
+  document.getElementById("statTotalTools").textContent = tools.length;
+  document.getElementById("statEmProducao").textContent = tools.filter(t=>getToolCurrentStatus(t)==="Em Produção").length;
+  document.getElementById("statAguardando").textContent = tools.filter(t=>getToolCurrentStatus(t)==="Aguardando Ferramentaria").length;
+  document.getElementById("statDisponiveis").textContent = tools.filter(t=>getToolCurrentStatus(t)==="Disponível").length;
+}
+
+// ── TOOL LIST ─────────────────────────────────────────────────────────────────
+function renderToolList() {
+  renderToolStats();
+  const term = (document.getElementById("toolSearch").value||"").trim().toLowerCase();
+  const list = document.getElementById("toolList");
+  const filtered = tools.filter(t => !term || [t.numFerramenta,t.codigoPrometal,t.cc,t.cliente,t.descOperacao,t.descProduto,t.codProdCliente,t.numOP].filter(Boolean).some(v=>v.toLowerCase().includes(term)));
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">Nenhuma ferramenta encontrada.</div>';
+    return;
+  }
+  list.innerHTML = "";
+  filtered.forEach(tool => {
+    const status = getToolCurrentStatus(tool);
+    const tc = cycles.filter(c => c.toolId === tool.id);
+    const openCycle = tc.find(c => !c.saidaData);
+
+    const el = document.createElement("div");
+    el.className = "tool-card";
+    el.innerHTML = `
+      <div class="tool-head">
+        <div class="tool-head-info">
+          <h3>${esc(tool.numFerramenta)} ${tool.codigoPrometal ? "· "+esc(tool.codigoPrometal):""}</h3>
+          <div class="tool-head-meta">${esc(tool.descProduto)||"—"} ${tool.cliente?"· "+esc(tool.cliente):""}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="badge ${statusBadgeClass(status)}">${esc(status)}</span>
+          <span class="helper">${tc.length} ciclo(s)</span>
+        </div>
+      </div>
+      <div class="tool-body">
+        <dl>
+          <div><dt>C.C.</dt><dd>${esc(tool.cc)||"—"}</dd></div>
+          <div><dt>Nº OP.</dt><dd>${esc(tool.numOP)||"—"}</dd></div>
+          <div><dt>Cód. Prod. Cliente</dt><dd>${esc(tool.codProdCliente)||"—"}</dd></div>
+          <div><dt>Descrição da Operação</dt><dd>${esc(tool.descOperacao)||"—"}</dd></div>
+        </dl>
+        <dl>
+          <div><dt>Cadastrada em</dt><dd>${fmtD(tool.createdAt)}</dd></div>
+          ${openCycle?`<div><dt>Em máquina desde</dt><dd>${fmtDT(openCycle.entradaData)}</dd></div><div><dt>Máquina</dt><dd>${esc(openCycle.entradaMaquina)||"—"}</dd></div><div><dt>Preparador entrada</dt><dd>${esc(openCycle.entradaPreparador)||"—"}</dd></div>`:""}
+        </dl>
+      </div>
+      <div class="tool-foot">
+        ${!openCycle ? `<button class="btn btn-primary btn-sm" data-action="entrada" data-id="${tool.id}">+ Registrar Entrada</button>` : `<button class="btn btn-ok btn-sm" data-action="saida" data-id="${tool.id}" data-cycle="${openCycle.id}">⬆ Registrar Saída</button>`}
+        ${status==="Aguardando Ferramentaria" ? `<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>` : ""}
+        <button class="btn btn-ghost btn-sm" data-action="ver-historico" data-id="${tool.id}">Ver histórico</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit-tool" data-id="${tool.id}">Editar</button>
+        <button class="btn btn-danger btn-sm" data-action="del-tool" data-id="${tool.id}">Excluir</button>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+
+  list.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.action, id = btn.dataset.id;
+      if (action === "entrada") openEntradaModal(id);
+      else if (action === "saida") openSaidaModal(id, btn.dataset.cycle);
+      else if (action === "liberar") liberarFerramenta(id);
+      else if (action === "edit-tool") openEditToolModal(id);
+      else if (action === "del-tool") deleteTool(id);
+      else if (action === "ver-historico") goToHistorico(id);
+    });
+  });
+}
+
+function goToHistorico(toolId) {
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("is-active"));
+  document.querySelectorAll(".tab-view").forEach(v=>v.classList.remove("is-active"));
+  document.querySelector('[data-nav="historico"]').classList.add("is-active");
+  document.getElementById("view-historico").classList.add("is-active");
+  document.getElementById("histToolFilter").value = toolId;
+  renderHistList();
+}
+
+function deleteTool(id) {
+  const tool = tools.find(t=>t.id===id);
+  if (!tool) return;
+  if (!confirm("Excluir ferramenta "+tool.numFerramenta+" e todos os seus ciclos?")) return;
+  tools = tools.filter(t=>t.id!==id);
+  cycles = cycles.filter(c=>c.toolId!==id);
+  saveAll(); renderToolList(); renderHistList();
+}
+
+// ── NEW TOOL MODAL ────────────────────────────────────────────────────────────
+document.getElementById("openNewToolBtn").addEventListener("click", () => {
+  document.getElementById("modalToolTitle").textContent = "Nova Ferramenta";
+  document.getElementById("fToolId").value = "";
+  document.getElementById("formTool").reset();
+  openModal("modalTool");
+});
+
+function openEditToolModal(id) {
+  const tool = tools.find(t=>t.id===id); if (!tool) return;
+  document.getElementById("modalToolTitle").textContent = "Editar Ferramenta";
+  document.getElementById("fToolId").value = tool.id;
+  document.getElementById("fNumFerramenta").value = tool.numFerramenta||"";
+  document.getElementById("fCC").value = tool.cc||"";
+  document.getElementById("fCodigoPrometal").value = tool.codigoPrometal||"";
+  document.getElementById("fCliente").value = tool.cliente||"";
+  document.getElementById("fDescOperacao").value = tool.descOperacao||"";
+  document.getElementById("fNumOP").value = tool.numOP||"";
+  document.getElementById("fDescProduto").value = tool.descProduto||"";
+  document.getElementById("fCodProdCliente").value = tool.codProdCliente||"";
+  document.getElementById("fStatusFerramenta").value = tool.status||"Disponível";
+  openModal("modalTool");
+}
+
+document.getElementById("formTool").addEventListener("submit", e => {
+  e.preventDefault();
+  const editId = document.getElementById("fToolId").value;
+  const data = {
+    numFerramenta: document.getElementById("fNumFerramenta").value.trim(),
+    cc: document.getElementById("fCC").value.trim(),
+    codigoPrometal: document.getElementById("fCodigoPrometal").value.trim(),
+    cliente: document.getElementById("fCliente").value.trim(),
+    descOperacao: document.getElementById("fDescOperacao").value.trim(),
+    numOP: document.getElementById("fNumOP").value.trim(),
+    descProduto: document.getElementById("fDescProduto").value.trim(),
+    codProdCliente: document.getElementById("fCodProdCliente").value.trim(),
+    status: document.getElementById("fStatusFerramenta").value
+  };
+  if (editId) {
+    const idx = tools.findIndex(t=>t.id===editId);
+    if (idx!==-1) tools[idx] = {...tools[idx], ...data};
+  } else {
+    tools.push({id:uid(), createdAt:new Date().toISOString(), ...data});
+  }
+  saveAll(); closeModal("modalTool"); renderToolList();
+  populateHistToolFilter();
+});
+
+// ── ENTRADA MODAL ─────────────────────────────────────────────────────────────
+function openEntradaModal(toolId) {
+  const tool = tools.find(t=>t.id===toolId); if (!tool) return;
+  document.getElementById("eToolId").value = toolId;
+  document.getElementById("eDataEntrada").value = dtLocal(new Date());
+  document.getElementById("ePreparador").value = "";
+  document.getElementById("eMaquina").value = "";
+  document.getElementById("entradaToolInfo").textContent = "Ferramenta: "+tool.numFerramenta+" — "+tool.descProduto;
+  openModal("modalEntrada");
+}
+
+document.getElementById("formEntrada").addEventListener("submit", e => {
+  e.preventDefault();
+  const toolId = document.getElementById("eToolId").value;
+  const tool = tools.find(t=>t.id===toolId); if (!tool) return;
+  const tc = cycles.filter(c=>c.toolId===toolId);
+  const item = tc.length + 1;
+  const cycle = {
+    id: uid(), toolId, item,
+    entradaData: document.getElementById("eDataEntrada").value,
+    entradaPreparador: document.getElementById("ePreparador").value.trim(),
+    entradaMaquina: document.getElementById("eMaquina").value.trim(),
+    saidaData: null, saidaPreparador: "", qtdeProduzidas: "", qtdeAcumulada: "",
+    parecerProducao: "", dataParecerProducao: "", respProducao: "",
+    parecerQualidade: "", dataParecerQualidade: "", respQualidade: "",
+    nomeSigProducao: "", nomeSigQualidade: "",
+    dataSigProducao: "", localSigProducao: "",
+    dataSigQualidade: "", localSigQualidade: "",
+    liberado: false, emailEnviado: false, createdAt: new Date().toISOString()
+  };
+  cycles.push(cycle);
+  saveAll(); closeModal("modalEntrada"); renderToolList();
+});
+
+// ── SAÍDA MODAL ───────────────────────────────────────────────────────────────
+function openSaidaModal(toolId, cycleId) {
+  const tool = tools.find(t=>t.id===toolId);
+  const cycle = cycles.find(c=>c.id===cycleId);
+  if (!tool || !cycle) return;
+
+  document.getElementById("sCycleId").value = cycleId;
+  document.getElementById("sDataSaida").value = dtLocal(new Date());
+  document.getElementById("sPreparadorSaida").value = "";
+  document.getElementById("sQtdeProduzidas").value = "";
+  document.getElementById("sQtdeAcumulada").value = "";
+  document.getElementById("sParecerProducao").value = "";
+  document.getElementById("sDataParecerProducao").value = dateLocal(new Date());
+  document.getElementById("sResponsavelProducao").value = "";
+  document.getElementById("sParecerQualidade").value = "";
+  document.getElementById("sDataParecerQualidade").value = dateLocal(new Date());
+  document.getElementById("sResponsavelQualidade").value = "";
+  document.getElementById("sNomeSigProducao").value = "";
+  document.getElementById("sDataSigProducao").value = dateLocal(new Date());
+  document.getElementById("sLocalSigProducao").value = "";
+  document.getElementById("sNomeSigQualidade").value = "";
+  document.getElementById("sDataSigQualidade").value = dateLocal(new Date());
+  document.getElementById("sLocalSigQualidade").value = "";
+  document.getElementById("saidaEmailStatus").textContent = "";
+
+  document.getElementById("saidaToolInfo").innerHTML =
+    `⚠ Saída da ferramenta: <strong>${esc(tool.numFerramenta)}</strong> — ${esc(tool.descProduto)} · Ciclo Nº ${cycle.item} · Entrada: ${fmtDT(cycle.entradaData)} · Máquina: ${esc(cycle.entradaMaquina)||"—"}<br>Ao salvar, o histórico será assinado e e-mails serão disparados automaticamente.`;
+
+  openModal("modalSaida");
+}
+
+document.getElementById("formSaida").addEventListener("submit", async e => {
+  e.preventDefault();
+  const cycleId = document.getElementById("sCycleId").value;
+  const cycle = cycles.find(c=>c.id===cycleId); if (!cycle) return;
+  const tool = tools.find(t=>t.id===cycle.toolId); if (!tool) return;
+
+  const btn = document.getElementById("saveSaidaBtn");
+  btn.disabled = true; btn.textContent = "Salvando…";
+
+  Object.assign(cycle, {
+    saidaData: document.getElementById("sDataSaida").value,
+    saidaPreparador: document.getElementById("sPreparadorSaida").value.trim(),
+    qtdeProduzidas: document.getElementById("sQtdeProduzidas").value,
+    qtdeAcumulada: document.getElementById("sQtdeAcumulada").value,
+    parecerProducao: document.getElementById("sParecerProducao").value.trim(),
+    dataParecerProducao: document.getElementById("sDataParecerProducao").value,
+    respProducao: document.getElementById("sResponsavelProducao").value.trim(),
+    parecerQualidade: document.getElementById("sParecerQualidade").value.trim(),
+    dataParecerQualidade: document.getElementById("sDataParecerQualidade").value,
+    respQualidade: document.getElementById("sResponsavelQualidade").value.trim(),
+    nomeSigProducao: document.getElementById("sNomeSigProducao").value.trim(),
+    dataSigProducao: document.getElementById("sDataSigProducao").value,
+    localSigProducao: document.getElementById("sLocalSigProducao").value.trim(),
+    nomeSigQualidade: document.getElementById("sNomeSigQualidade").value.trim(),
+    dataSigQualidade: document.getElementById("sDataSigQualidade").value,
+    localSigQualidade: document.getElementById("sLocalSigQualidade").value.trim(),
+    closedAt: new Date().toISOString()
+  });
+
+  saveAll();
+  renderToolList();
+  renderHistList();
+
+  const statusEl = document.getElementById("saidaEmailStatus");
+
+  try {
+    statusEl.textContent = "Enviando e-mails…"; statusEl.dataset.tone = "info";
+    const result = await sendEmails(tool, cycle);
+    if (result.status === "sent") {
+      cycle.emailEnviado = true; saveAll();
+      statusEl.textContent = result.count+" e-mail(s) enviado(s)."; statusEl.dataset.tone = "ok";
+    } else if (result.status === "disabled") {
+      statusEl.textContent = "Salvo. E-mails desativados."; statusEl.dataset.tone = "info";
+    } else {
+      statusEl.textContent = "Salvo, mas e-mails não enviados: "+result.message; statusEl.dataset.tone = "warn";
+    }
+  } catch(err) {
+    statusEl.textContent = "Salvo, mas falha no e-mail: "+String(err.message||err); statusEl.dataset.tone = "danger";
+  } finally {
+    btn.disabled = false; btn.textContent = "Salvar saída e disparar e-mails";
+  }
+
+  // Close after short delay so user sees email status
+  setTimeout(() => closeModal("modalSaida"), 2800);
+});
+
+// ── HISTÓRICO LIST ────────────────────────────────────────────────────────────
+function populateHistToolFilter() {
+  const sel = document.getElementById("histToolFilter");
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todas as ferramentas</option>';
+  tools.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.numFerramenta + (t.descProduto?" — "+t.descProduto:"");
+    sel.appendChild(opt);
+  });
+  if (cur) sel.value = cur;
+}
+
+function renderHistList() {
+  const toolId = document.getElementById("histToolFilter").value;
+  const statusF = document.getElementById("histStatusFilter").value;
+
+  let filtered = cycles.slice();
+  if (toolId) filtered = filtered.filter(c=>c.toolId===toolId);
+
+  // Status filter
+  if (statusF) {
+    filtered = filtered.filter(c => {
+      const cs = cycleStatus(c);
+      return cs === statusF;
+    });
+  }
+
+  filtered.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  const list = document.getElementById("histList");
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">Nenhum ciclo encontrado para os filtros selecionados.</div>';
+    return;
+  }
+  list.innerHTML = "";
+  filtered.forEach(cycle => {
+    const tool = tools.find(t=>t.id===cycle.toolId);
+    if (!tool) return;
+    const cs = cycleStatus(cycle);
+    const el = document.createElement("div");
+    el.className = "cycle-card";
+    el.innerHTML = `
+      <div class="cycle-head">
+        <div>
+          <h3 class="cycle-title">${esc(tool.numFerramenta)} · Ciclo Nº ${cycle.item} · ${esc(tool.descProduto)||"—"}</h3>
+          <div class="cycle-meta">${esc(tool.cliente)||""} ${tool.codigoPrometal?"· "+esc(tool.codigoPrometal):""} · C.C.: ${esc(tool.cc)||"—"} · Operação: ${esc(tool.descOperacao)||"—"}</div>
+        </div>
+        <span class="badge ${statusBadgeClass(cs)}">${esc(cs)}</span>
+      </div>
+      <div class="cycle-body">
+        <div class="cycle-section">
+          <div class="cycle-section-title">Entrada</div>
+          <dl class="kv"><dt>Data entrada</dt><dd>${fmtDT(cycle.entradaData)}</dd></dl>
+          <dl class="kv"><dt>Preparador</dt><dd>${esc(cycle.entradaPreparador)||"—"}</dd></dl>
+          <dl class="kv"><dt>Máquina</dt><dd>${esc(cycle.entradaMaquina)||"—"}</dd></dl>
+        </div>
+        <div class="cycle-section">
+          <div class="cycle-section-title">Saída</div>
+          ${cycle.saidaData ? `
+            <dl class="kv"><dt>Data saída</dt><dd>${fmtDT(cycle.saidaData)}</dd></dl>
+            <dl class="kv"><dt>Preparador</dt><dd>${esc(cycle.saidaPreparador)||"—"}</dd></dl>
+            <dl class="kv"><dt>Qtde produzidas</dt><dd>${cycle.qtdeProduzidas||"—"}</dd></dl>
+            <dl class="kv"><dt>Qtde acumulada</dt><dd>${cycle.qtdeAcumulada||"—"}</dd></dl>
+          ` : '<p class="helper" style="color:var(--warn)">Ferramenta ainda em produção.</p>'}
+        </div>
+        ${cycle.parecerProducao ? `<div class="parecer-box prod"><span class="parecer-label">Parecer da Produção — ${esc(cycle.respProducao)||"—"} · ${fmtD(cycle.dataParecerProducao)}</span>${esc(cycle.parecerProducao)}</div>` : ""}
+        ${cycle.parecerQualidade ? `<div class="parecer-box qual"><span class="parecer-label">Parecer da Qualidade — ${esc(cycle.respQualidade)||"—"} · ${fmtD(cycle.dataParecerQualidade)}</span>${esc(cycle.parecerQualidade)}</div>` : ""}
+      </div>
+      ${cycle.saidaData ? `
+      <div class="cycle-foot">
+        <div class="sig-grid">
+          <div class="sig-card">
+            <span class="sig-label">Produção</span>
+            <div class="sig-owner">${cycle.nomeSigProducao?"Assinado por "+esc(cycle.nomeSigProducao):"Assinatura pendente"}</div>
+            <div class="sig-meta">${[cycle.dataSigProducao?fmtD(cycle.dataSigProducao):"",cycle.localSigProducao||""].filter(Boolean).join(" · ")}</div>
+          </div>
+          <div class="sig-card">
+            <span class="sig-label">Qualidade</span>
+            <div class="sig-owner">${cycle.nomeSigQualidade?"Assinado por "+esc(cycle.nomeSigQualidade):"Assinatura pendente"}</div>
+            <div class="sig-meta">${[cycle.dataSigQualidade?fmtD(cycle.dataSigQualidade):"",cycle.localSigQualidade||""].filter(Boolean).join(" · ")}</div>
+          </div>
+        </div>
+        <div class="toolbar-group">
+          ${cycle.emailEnviado?'<span class="badge badge-concluido">E-mail enviado</span>':'<span class="badge badge-aguardando">E-mail pendente</span>'}
+          ${cycle.liberado?'<span class="badge badge-disponivel">Ferramenta liberada</span>':`<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>`}
+          <button class="btn btn-ghost btn-sm" data-action="del-cycle" data-id="${cycle.id}">Excluir ciclo</button>
+        </div>
+      </div>` : `
+      <div class="cycle-foot">
+        <button class="btn btn-ok btn-sm" data-action="saida-from-hist" data-id="${tool.id}" data-cycle="${cycle.id}">⬆ Registrar Saída</button>
+        <button class="btn btn-danger btn-sm" data-action="del-cycle" data-id="${cycle.id}">Excluir ciclo</button>
+      </div>`}
+    `;
+    list.appendChild(el);
+  });
+
+  list.querySelectorAll("[data-action]").forEach(btn => {
+    const action = btn.dataset.action, id = btn.dataset.id;
+    if (action === "del-cycle") {
+      btn.addEventListener("click", () => {
+        if (!confirm("Excluir este ciclo?")) return;
+        cycles = cycles.filter(c=>c.id!==id);
+        saveAll(); renderToolList(); renderHistList();
+      });
+    } else if (action === "saida-from-hist") {
+      btn.addEventListener("click", () => openSaidaModal(id, btn.dataset.cycle));
+    } else if (action === "liberar") {
+      btn.addEventListener("click", () => liberarFerramenta(id));
+    }
+  });
+}
+
+function cycleStatus(cycle) {
+  if (!cycle.saidaData) return "Em Produção";
+  if (cycle.nomeSigProducao && cycle.nomeSigQualidade) return "Concluído";
+  return "Aguardando Ferramentaria";
+}
+
+// ── EMAIL SETTINGS UI ─────────────────────────────────────────────────────────
+document.getElementById("saveEmailSettingsBtn").addEventListener("click", () => {
+  emailCfg = getEmailFormValues();
+  saveJSON(STORAGE_EMAIL, emailCfg);
+  updateEmailConfigUi(emailCfg);
+  const msg = emailCfgValid(emailCfg);
+  if (!emailCfg.enabled) setEmailSendStatus("E-mails automáticos desativados.", "info");
+  else if (msg) setEmailSendStatus("Configuração salva, mas falta: "+msg, "warn");
+  else setEmailSendStatus("Configuração salva. "+parseEmails(emailCfg.recipients).length+" destinatário(s).", "ok");
+});
+
+document.getElementById("emailEnabled").addEventListener("change", () => updateEmailConfigUi(getEmailFormValues()));
+["emailRecipients","emailPublicKey","emailServiceId","emailTemplateId"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => updateEmailConfigUi(getEmailFormValues()));
+});
+
+// ── SEARCH / FILTER ───────────────────────────────────────────────────────────
+document.getElementById("toolSearch").addEventListener("input", renderToolList);
+document.getElementById("histToolFilter").addEventListener("change", renderHistList);
+document.getElementById("histStatusFilter").addEventListener("change", renderHistList);
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({tools,cycles},null,2)],{type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "historico-ferramental-pro-metal.json"; a.click();
+  URL.revokeObjectURL(a.href);
+});
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+document.getElementById("importFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data.tools) || !Array.isArray(data.cycles)) throw new Error("Arquivo não contém os dados esperados (tools/cycles).");
+      if (!confirm("Importar este arquivo substituirá todos os dados atuais. Deseja continuar?")) return;
+      tools = data.tools;
+      cycles = data.cycles;
+      saveAll();
+      populateHistToolFilter();
+      renderToolList();
+      renderHistList();
+      alert("Dados importados com sucesso.");
+    } catch (err) {
+      alert("Erro ao importar: "+(err.message||err));
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+document.getElementById("printToolsBtn").addEventListener("click", () => window.print());
+document.getElementById("printHistBtn").addEventListener("click", () => window.print());
+
+// ── ESCAPE HTML ───────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+applyEmailFormFromCfg(emailCfg);
+updateEmailConfigUi(emailCfg);
+if (!emailCfg.enabled) setEmailSendStatus("E-mails automáticos desativados.", "info");
+else {
+  const m = emailCfgValid(emailCfg);
+  if (m) setEmailSendStatus("Configuração carregada, mas falta: "+m, "warn");
+  else setEmailSendStatus("Configuração carregada. Pronto para enviar.", "ok");
+}
+populateHistToolFilter();
+renderToolList();
+</script>
+</body>
+</html>
