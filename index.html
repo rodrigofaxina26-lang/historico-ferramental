@@ -231,7 +231,7 @@
       <span class="status-inline" id="emailConfigStatus" data-tone="info">Não configurado</span>
     </summary>
     <div class="email-body">
-      <p class="helper">Quando ativado, envia e-mail automaticamente para as áreas interessadas ao registrar a <strong>saída</strong> da ferramenta (requer conta no EmailJS).</p>
+      <p class="helper">Quando ativado, envia e-mail automaticamente para as áreas interessadas ao registrar a <strong>saída</strong> da ferramenta (requer um Web App do Google Apps Script — veja <code>google-apps-script.gs</code> no projeto).</p>
       <label class="checkbox-inline">
         <input type="checkbox" id="emailEnabled">
         Ativar envio automático de e-mails na saída
@@ -241,17 +241,13 @@
           <label for="emailRecipients">E-mails destino (separados por vírgula)</label>
           <input id="emailRecipients" type="text" placeholder="qualidade@empresa.com, ferramentaria@empresa.com, producao@empresa.com">
         </div>
-        <div class="field">
-          <label for="emailPublicKey">EmailJS Public Key</label>
-          <input id="emailPublicKey" type="text" placeholder="Public Key">
+        <div class="field field-full">
+          <label for="emailWebAppUrl">URL do Web App (Google Apps Script)</label>
+          <input id="emailWebAppUrl" type="text" placeholder="https://script.google.com/macros/s/SEU_ID/exec">
         </div>
-        <div class="field">
-          <label for="emailServiceId">EmailJS Service ID</label>
-          <input id="emailServiceId" type="text" placeholder="Service ID">
-        </div>
-        <div class="field">
-          <label for="emailTemplateId">EmailJS Template ID</label>
-          <input id="emailTemplateId" type="text" placeholder="Template ID">
+        <div class="field field-full">
+          <label for="emailToken">Token de segurança (opcional, definido no script)</label>
+          <input id="emailToken" type="text" placeholder="Token secreto, se configurado no script">
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -561,12 +557,11 @@
 const STORAGE_TOOLS = "pm-ferramentas-v2";
 const STORAGE_CYCLES = "pm-ciclos-v2";
 const STORAGE_EMAIL = "pm-email-v2";
-const EMAIL_API = "https://api.emailjs.com/api/v1.0/email/send";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 let tools = loadJSON(STORAGE_TOOLS, []);
 let cycles = loadJSON(STORAGE_CYCLES, []);
-let emailCfg = loadJSON(STORAGE_EMAIL, {enabled:false,recipients:"",publicKey:"",serviceId:"",templateId:""});
+let emailCfg = loadJSON(STORAGE_EMAIL, {enabled:false,recipients:"",webAppUrl:"",token:""});
 
 function loadJSON(key, def) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
@@ -603,25 +598,21 @@ function parseEmails(s) { return String(s||"").split(/[\n,;]+/).map(x=>x.trim())
 function applyEmailFormFromCfg(c) {
   document.getElementById("emailEnabled").checked = !!c.enabled;
   document.getElementById("emailRecipients").value = c.recipients||"";
-  document.getElementById("emailPublicKey").value = c.publicKey||"";
-  document.getElementById("emailServiceId").value = c.serviceId||"";
-  document.getElementById("emailTemplateId").value = c.templateId||"";
+  document.getElementById("emailWebAppUrl").value = c.webAppUrl||"";
+  document.getElementById("emailToken").value = c.token||"";
 }
 function getEmailFormValues() {
   return {
     enabled: document.getElementById("emailEnabled").checked,
     recipients: document.getElementById("emailRecipients").value.trim(),
-    publicKey: document.getElementById("emailPublicKey").value.trim(),
-    serviceId: document.getElementById("emailServiceId").value.trim(),
-    templateId: document.getElementById("emailTemplateId").value.trim()
+    webAppUrl: document.getElementById("emailWebAppUrl").value.trim(),
+    token: document.getElementById("emailToken").value.trim()
   };
 }
 function emailCfgValid(c) {
   if (!c.enabled) return "";
   if (!parseEmails(c.recipients).length) return "Informe ao menos um e-mail destino.";
-  if (!c.publicKey) return "Informe a Public Key do EmailJS.";
-  if (!c.serviceId) return "Informe o Service ID do EmailJS.";
-  if (!c.templateId) return "Informe o Template ID do EmailJS.";
+  if (!c.webAppUrl) return "Informe a URL do Web App do Google Apps Script.";
   return "";
 }
 function updateEmailConfigUi(c) {
@@ -664,6 +655,95 @@ function buildEmailBody(tool, cycle) {
   ].join("\n");
 }
 
+function buildEmailBodyHtml(tool, cycle) {
+  const row = (label, value) =>
+    `<tr><td style="padding:5px 10px;color:#5c6e85;font-size:13px;width:42%;border-bottom:1px solid #eef1f5;">${esc(label)}</td>`+
+    `<td style="padding:5px 10px;font-size:13px;font-weight:600;color:#1c2a3a;border-bottom:1px solid #eef1f5;">${esc(value||"—")}</td></tr>`;
+  const sectionTitle = title =>
+    `<h3 style="margin:18px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1857b8;">${esc(title)}</h3>`;
+  const table = rows => `<table style="width:100%;border-collapse:collapse;">${rows}</table>`;
+  const paragraph = text =>
+    `<p style="margin:6px 0 0;font-size:13px;color:#1c2a3a;white-space:pre-wrap;">${esc(text||"—")}</p>`;
+
+  return `
+<div style="font-family:Segoe UI,Arial,sans-serif;max-width:640px;margin:0 auto;">
+  <div style="background:#1857b8;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;">
+    <h2 style="margin:0;font-size:17px;">Histórico Ferramental — Saída da Ferramenta</h2>
+  </div>
+  <div style="border:1px solid #dce3ec;border-top:none;border-radius:0 0 8px 8px;padding:18px 20px;">
+    ${sectionTitle("Ferramenta")}
+    ${table([
+      row("Nº Ferramenta", tool.numFerramenta),
+      row("Código PROMETAL", tool.codigoPrometal),
+      row("C.C.", tool.cc),
+      row("Cliente", tool.cliente),
+      row("Descrição da Operação", tool.descOperacao),
+      row("Nº OP.", tool.numOP),
+      row("Descrição do Produto", tool.descProduto),
+      row("Cód. Prod. Cliente", tool.codProdCliente),
+    ].join(""))}
+
+    ${sectionTitle("Ciclo Nº "+esc(cycle.item))}
+    ${table([
+      row("Entrada", fmtDT(cycle.entradaData)),
+      row("Preparador (entrada)", cycle.entradaPreparador),
+      row("Máquina", cycle.entradaMaquina),
+      row("Saída", fmtDT(cycle.saidaData)),
+      row("Preparador (saída)", cycle.saidaPreparador),
+      row("Peças produzidas", cycle.qtdeProduzidas),
+      row("Peças acumuladas", cycle.qtdeAcumulada),
+    ].join(""))}
+
+    ${sectionTitle("Parecer da Produção ("+fmtD(cycle.dataParecerProducao)+" — "+esc(cycle.respProducao||"—")+")")}
+    ${paragraph(cycle.parecerProducao)}
+
+    ${sectionTitle("Parecer da Qualidade ("+fmtD(cycle.dataParecerQualidade)+" — "+esc(cycle.respQualidade||"—")+")")}
+    ${paragraph(cycle.parecerQualidade)}
+
+    ${sectionTitle("Assinaturas")}
+    ${table([
+      row("Produção", (cycle.nomeSigProducao||"—")+(cycle.dataSigProducao?" · "+fmtD(cycle.dataSigProducao):"")+(cycle.localSigProducao?" · "+cycle.localSigProducao:"")),
+      row("Qualidade", (cycle.nomeSigQualidade||"—")+(cycle.dataSigQualidade?" · "+fmtD(cycle.dataSigQualidade):"")+(cycle.localSigQualidade?" · "+cycle.localSigQualidade:"")),
+    ].join(""))}
+  </div>
+  <p style="text-align:center;font-size:11px;color:#9aa7ba;margin-top:12px;">E-mail gerado automaticamente pelo Histórico Ferramental — Pro metal</p>
+</div>`;
+}
+
+// Ordem deve corresponder a SHEET_HEADERS em google-apps-script.gs
+function buildSheetRecord(tool, cycle) {
+  return [
+    fmtDT(cycle.saidaData),
+    tool.numFerramenta||"",
+    tool.codigoPrometal||"",
+    tool.cc||"",
+    tool.cliente||"",
+    tool.descOperacao||"",
+    tool.numOP||"",
+    tool.descProduto||"",
+    tool.codProdCliente||"",
+    cycle.item||"",
+    fmtDT(cycle.entradaData),
+    cycle.entradaPreparador||"",
+    cycle.entradaMaquina||"",
+    cycle.saidaPreparador||"",
+    cycle.qtdeProduzidas||"",
+    cycle.qtdeAcumulada||"",
+    cycle.parecerProducao||"",
+    fmtD(cycle.dataParecerProducao),
+    cycle.respProducao||"",
+    cycle.parecerQualidade||"",
+    fmtD(cycle.dataParecerQualidade),
+    cycle.respQualidade||"",
+    cycle.nomeSigProducao||"",
+    fmtD(cycle.dataSigProducao),
+    cycle.localSigProducao||"",
+    cycle.nomeSigQualidade||"",
+    fmtD(cycle.dataSigQualidade),
+    cycle.localSigQualidade||"",
+  ];
+}
+
 async function sendEmails(tool, cycle) {
   const cfg = emailCfg;
   if (!cfg.enabled) return {status:"disabled"};
@@ -672,42 +752,17 @@ async function sendEmails(tool, cycle) {
   const recipients = parseEmails(cfg.recipients);
   const subject = "SAÍDA — "+tool.numFerramenta+" | "+tool.descProduto;
   const body = buildEmailBody(tool, cycle);
-  for (let i=0; i<recipients.length; i++) {
-    const res = await fetch(EMAIL_API, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        service_id: cfg.serviceId,
-        template_id: cfg.templateId,
-        user_id: cfg.publicKey,
-        template_params: {
-          to_email: recipients[i], subject,
-          num_ferramenta: tool.numFerramenta||"—",
-          codigo_prometal: tool.codigoPrometal||"—",
-          cc: tool.cc||"—",
-          cliente: tool.cliente||"—",
-          desc_operacao: tool.descOperacao||"—",
-          num_op: tool.numOP||"—",
-          desc_produto: tool.descProduto||"—",
-          cod_prod_cliente: tool.codProdCliente||"—",
-          item: cycle.item||"—",
-          entrada_data: fmtDT(cycle.entradaData),
-          entrada_preparador: cycle.entradaPreparador||"—",
-          entrada_maquina: cycle.entradaMaquina||"—",
-          saida_data: fmtDT(cycle.saidaData),
-          saida_preparador: cycle.saidaPreparador||"—",
-          qtde_produzidas: cycle.qtdeProduzidas||"0",
-          qtde_acumulada: cycle.qtdeAcumulada||"0",
-          parecer_producao: cycle.parecerProducao||"—",
-          resp_producao: cycle.respProducao||"—",
-          parecer_qualidade: cycle.parecerQualidade||"—",
-          resp_qualidade: cycle.respQualidade||"—",
-          message: body
-        }
-      })
-    });
-    if (!res.ok) { const t = (await res.text()).trim(); throw new Error(t||"Falha ao enviar e-mail."); }
-    if (i < recipients.length-1) await new Promise(r => setTimeout(r, 1100));
+  const htmlBody = buildEmailBodyHtml(tool, cycle);
+  const record = buildSheetRecord(tool, cycle);
+  const res = await fetch(cfg.webAppUrl, {
+    method: "POST",
+    headers: {"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({ token: cfg.token||"", recipients, subject, body, htmlBody, record })
+  });
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok || (data && data.status === "error")) {
+    throw new Error((data && data.message) || "Falha ao enviar e-mail.");
   }
   return {status:"sent", count:recipients.length};
 }
@@ -1002,6 +1057,8 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
   renderToolList();
   renderHistList();
 
+  alert("⚠ Lembrete: leve peças da produção até a Ferramentaria para verificação do produto.");
+
   const statusEl = document.getElementById("saidaEmailStatus");
 
   try {
@@ -1157,7 +1214,7 @@ document.getElementById("saveEmailSettingsBtn").addEventListener("click", () => 
 });
 
 document.getElementById("emailEnabled").addEventListener("change", () => updateEmailConfigUi(getEmailFormValues()));
-["emailRecipients","emailPublicKey","emailServiceId","emailTemplateId"].forEach(id => {
+["emailRecipients","emailWebAppUrl","emailToken"].forEach(id => {
   document.getElementById(id).addEventListener("input", () => updateEmailConfigUi(getEmailFormValues()));
 });
 
