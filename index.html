@@ -224,6 +224,32 @@
     </div>
   </header>
 
+  <!-- CENTRAL DE DADOS (sempre visível) -->
+  <details class="email-details" id="syncDetailsEl">
+    <summary>
+      Central de Dados (Google Apps Script)
+      <span class="status-inline" id="syncConfigStatus" data-tone="info">Não configurado</span>
+    </summary>
+    <div class="email-body">
+      <p class="helper">Configure aqui a URL do Web App do Google Apps Script para que <strong>todos os computadores</strong> (produção, qualidade, ferramentaria) compartilhem os mesmos dados de ferramentas e ciclos — veja <code>google-apps-script.gs</code> no projeto.</p>
+      <div class="form-grid g3">
+        <div class="field field-full">
+          <label for="syncWebAppUrl">URL do Web App (Google Apps Script)</label>
+          <input id="syncWebAppUrl" type="text" placeholder="https://script.google.com/macros/s/SEU_ID/exec">
+        </div>
+        <div class="field field-full">
+          <label for="syncToken">Token de segurança (opcional, definido no script)</label>
+          <input id="syncToken" type="text" placeholder="Token secreto, se configurado no script">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost btn-sm" id="saveSyncSettingsBtn">Salvar e sincronizar</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="refreshDataBtn">🔄 Atualizar dados</button>
+        <span class="helper" id="syncStatus">Central de Dados não configurada — os dados ficam apenas neste computador.</span>
+      </div>
+    </div>
+  </details>
+
   <!-- EMAIL SETTINGS (sempre visível) -->
   <details class="email-details" id="emailDetailsEl">
     <summary>
@@ -231,7 +257,7 @@
       <span class="status-inline" id="emailConfigStatus" data-tone="info">Não configurado</span>
     </summary>
     <div class="email-body">
-      <p class="helper">Quando ativado, envia e-mail automaticamente para as áreas interessadas ao registrar a <strong>saída</strong> da ferramenta (requer um Web App do Google Apps Script — veja <code>google-apps-script.gs</code> no projeto).</p>
+      <p class="helper">Quando ativado, envia e-mail automaticamente para as áreas interessadas ao registrar a <strong>saída</strong> da ferramenta (requer a Central de Dados configurada acima).</p>
       <label class="checkbox-inline">
         <input type="checkbox" id="emailEnabled">
         Ativar envio automático de e-mails na saída
@@ -240,14 +266,6 @@
         <div class="field field-full">
           <label for="emailRecipients">E-mails destino (separados por vírgula)</label>
           <input id="emailRecipients" type="text" placeholder="qualidade@empresa.com, ferramentaria@empresa.com, producao@empresa.com">
-        </div>
-        <div class="field field-full">
-          <label for="emailWebAppUrl">URL do Web App (Google Apps Script)</label>
-          <input id="emailWebAppUrl" type="text" placeholder="https://script.google.com/macros/s/SEU_ID/exec">
-        </div>
-        <div class="field field-full">
-          <label for="emailToken">Token de segurança (opcional, definido no script)</label>
-          <input id="emailToken" type="text" placeholder="Token secreto, se configurado no script">
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -557,11 +575,13 @@
 const STORAGE_TOOLS = "pm-ferramentas-v2";
 const STORAGE_CYCLES = "pm-ciclos-v2";
 const STORAGE_EMAIL = "pm-email-v2";
+const STORAGE_SYNC = "pm-sync-v1";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 let tools = loadJSON(STORAGE_TOOLS, []);
 let cycles = loadJSON(STORAGE_CYCLES, []);
-let emailCfg = loadJSON(STORAGE_EMAIL, {enabled:false,recipients:"",webAppUrl:"",token:""});
+let emailCfg = loadJSON(STORAGE_EMAIL, {enabled:false,recipients:""});
+let syncCfg = loadJSON(STORAGE_SYNC, {webAppUrl:"",token:""});
 
 function loadJSON(key, def) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
@@ -598,21 +618,17 @@ function parseEmails(s) { return String(s||"").split(/[\n,;]+/).map(x=>x.trim())
 function applyEmailFormFromCfg(c) {
   document.getElementById("emailEnabled").checked = !!c.enabled;
   document.getElementById("emailRecipients").value = c.recipients||"";
-  document.getElementById("emailWebAppUrl").value = c.webAppUrl||"";
-  document.getElementById("emailToken").value = c.token||"";
 }
 function getEmailFormValues() {
   return {
     enabled: document.getElementById("emailEnabled").checked,
-    recipients: document.getElementById("emailRecipients").value.trim(),
-    webAppUrl: document.getElementById("emailWebAppUrl").value.trim(),
-    token: document.getElementById("emailToken").value.trim()
+    recipients: document.getElementById("emailRecipients").value.trim()
   };
 }
 function emailCfgValid(c) {
   if (!c.enabled) return "";
   if (!parseEmails(c.recipients).length) return "Informe ao menos um e-mail destino.";
-  if (!c.webAppUrl) return "Informe a URL do Web App do Google Apps Script.";
+  if (!syncCfg.webAppUrl) return "Configure a Central de Dados (Apps Script) acima.";
   return "";
 }
 function updateEmailConfigUi(c) {
@@ -626,6 +642,99 @@ function updateEmailConfigUi(c) {
 function setEmailSendStatus(msg, tone) {
   const el = document.getElementById("emailSendStatus");
   el.textContent = msg; el.dataset.tone = tone;
+}
+
+// ── CENTRAL DE DADOS (SYNC) ───────────────────────────────────────────────────
+function syncConfigured() { return !!syncCfg.webAppUrl; }
+
+function applySyncFormFromCfg(c) {
+  document.getElementById("syncWebAppUrl").value = c.webAppUrl||"";
+  document.getElementById("syncToken").value = c.token||"";
+}
+function getSyncFormValues() {
+  return {
+    webAppUrl: document.getElementById("syncWebAppUrl").value.trim(),
+    token: document.getElementById("syncToken").value.trim()
+  };
+}
+function updateSyncConfigUi() {
+  const el = document.getElementById("syncConfigStatus");
+  if (!syncConfigured()) { el.textContent="Não configurado"; el.dataset.tone="info"; return; }
+  el.textContent="Configurado"; el.dataset.tone="ok";
+}
+function setSyncStatus(msg, tone) {
+  const el = document.getElementById("syncStatus");
+  el.textContent = msg; el.dataset.tone = tone;
+}
+
+async function apiCall(action, payload) {
+  if (!syncConfigured()) return {status:"disabled"};
+  const res = await fetch(syncCfg.webAppUrl, {
+    method: "POST",
+    headers: {"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({ action, token: syncCfg.token||"", ...payload })
+  });
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok || (data && data.status === "error")) {
+    throw new Error((data && data.message) || "Falha na comunicação com a Central de Dados.");
+  }
+  return data;
+}
+
+async function apiGet() {
+  if (!syncConfigured()) return {status:"disabled"};
+  const url = syncCfg.webAppUrl + "?action=getData&token=" + encodeURIComponent(syncCfg.token||"");
+  const res = await fetch(url);
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok || (data && data.status === "error")) {
+    throw new Error((data && data.message) || "Falha ao carregar dados da Central de Dados.");
+  }
+  return data;
+}
+
+async function loadFromServer() {
+  if (!syncConfigured()) return;
+  setSyncStatus("Atualizando…", "info");
+  try {
+    const data = await apiGet();
+    tools = Array.isArray(data.tools) ? data.tools : [];
+    cycles = Array.isArray(data.cycles) ? data.cycles : [];
+    saveAll();
+    populateHistToolFilter();
+    renderToolList();
+    renderHistList();
+    setSyncStatus("Dados atualizados em "+new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date())+".", "ok");
+  } catch (err) {
+    setSyncStatus("Falha ao atualizar: "+String(err.message||err), "danger");
+  }
+}
+
+async function syncUpsertTool(tool) {
+  if (!syncConfigured()) return;
+  try { await apiCall("upsertTool", {item: tool}); }
+  catch (err) { setSyncStatus("Falha ao sincronizar ferramenta: "+String(err.message||err), "danger"); }
+}
+async function syncDeleteTool(id) {
+  if (!syncConfigured()) return;
+  try { await apiCall("deleteTool", {id}); }
+  catch (err) { setSyncStatus("Falha ao sincronizar exclusão: "+String(err.message||err), "danger"); }
+}
+async function syncUpsertCycle(cycle) {
+  if (!syncConfigured()) return;
+  try { await apiCall("upsertCycle", {item: cycle}); }
+  catch (err) { setSyncStatus("Falha ao sincronizar ciclo: "+String(err.message||err), "danger"); }
+}
+async function syncDeleteCycle(id) {
+  if (!syncConfigured()) return;
+  try { await apiCall("deleteCycle", {id}); }
+  catch (err) { setSyncStatus("Falha ao sincronizar exclusão: "+String(err.message||err), "danger"); }
+}
+async function syncBulkImport(toolsData, cyclesData) {
+  if (!syncConfigured()) return;
+  try { await apiCall("bulkImport", {tools: toolsData, cycles: cyclesData}); }
+  catch (err) { setSyncStatus("Falha ao sincronizar importação: "+String(err.message||err), "danger"); }
 }
 
 function buildEmailBody(tool, cycle) {
@@ -754,16 +863,7 @@ async function sendEmails(tool, cycle) {
   const body = buildEmailBody(tool, cycle);
   const htmlBody = buildEmailBodyHtml(tool, cycle);
   const record = buildSheetRecord(tool, cycle);
-  const res = await fetch(cfg.webAppUrl, {
-    method: "POST",
-    headers: {"Content-Type":"text/plain;charset=utf-8"},
-    body: JSON.stringify({ token: cfg.token||"", recipients, subject, body, htmlBody, record })
-  });
-  let data = null;
-  try { data = await res.json(); } catch {}
-  if (!res.ok || (data && data.status === "error")) {
-    throw new Error((data && data.message) || "Falha ao enviar e-mail.");
-  }
+  const data = await apiCall("sendEmail", { recipients, subject, body, htmlBody, record });
   return {status:"sent", count:recipients.length};
 }
 
@@ -806,6 +906,7 @@ function liberarFerramenta(toolId) {
   const last = tc.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
   last.liberado = true;
   saveAll(); renderToolList(); renderHistList();
+  syncUpsertCycle(last);
 }
 
 function statusBadgeClass(s) {
@@ -909,6 +1010,7 @@ function deleteTool(id) {
   tools = tools.filter(t=>t.id!==id);
   cycles = cycles.filter(c=>c.toolId!==id);
   saveAll(); renderToolList(); renderHistList();
+  syncDeleteTool(id);
 }
 
 // ── NEW TOOL MODAL ────────────────────────────────────────────────────────────
@@ -949,14 +1051,18 @@ document.getElementById("formTool").addEventListener("submit", e => {
     codProdCliente: document.getElementById("fCodProdCliente").value.trim(),
     status: document.getElementById("fStatusFerramenta").value
   };
+  let savedTool;
   if (editId) {
     const idx = tools.findIndex(t=>t.id===editId);
     if (idx!==-1) tools[idx] = {...tools[idx], ...data};
+    savedTool = tools[idx];
   } else {
-    tools.push({id:uid(), createdAt:new Date().toISOString(), ...data});
+    savedTool = {id:uid(), createdAt:new Date().toISOString(), ...data};
+    tools.push(savedTool);
   }
   saveAll(); closeModal("modalTool"); renderToolList();
   populateHistToolFilter();
+  syncUpsertTool(savedTool);
 });
 
 // ── ENTRADA MODAL ─────────────────────────────────────────────────────────────
@@ -991,6 +1097,7 @@ document.getElementById("formEntrada").addEventListener("submit", e => {
   };
   cycles.push(cycle);
   saveAll(); closeModal("modalEntrada"); renderToolList();
+  syncUpsertCycle(cycle);
 });
 
 // ── SAÍDA MODAL ───────────────────────────────────────────────────────────────
@@ -1056,6 +1163,7 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
   saveAll();
   renderToolList();
   renderHistList();
+  syncUpsertCycle(cycle);
 
   alert("⚠ Lembrete: leve peças da produção até a Ferramentaria para verificação do produto.");
 
@@ -1066,6 +1174,7 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
     const result = await sendEmails(tool, cycle);
     if (result.status === "sent") {
       cycle.emailEnviado = true; saveAll();
+      syncUpsertCycle(cycle);
       statusEl.textContent = result.count+" e-mail(s) enviado(s)."; statusEl.dataset.tone = "ok";
     } else if (result.status === "disabled") {
       statusEl.textContent = "Salvo. E-mails desativados."; statusEl.dataset.tone = "info";
@@ -1187,6 +1296,7 @@ function renderHistList() {
         if (!confirm("Excluir este ciclo?")) return;
         cycles = cycles.filter(c=>c.id!==id);
         saveAll(); renderToolList(); renderHistList();
+        syncDeleteCycle(id);
       });
     } else if (action === "saida-from-hist") {
       btn.addEventListener("click", () => openSaidaModal(id, btn.dataset.cycle));
@@ -1214,9 +1324,25 @@ document.getElementById("saveEmailSettingsBtn").addEventListener("click", () => 
 });
 
 document.getElementById("emailEnabled").addEventListener("change", () => updateEmailConfigUi(getEmailFormValues()));
-["emailRecipients","emailWebAppUrl","emailToken"].forEach(id => {
-  document.getElementById(id).addEventListener("input", () => updateEmailConfigUi(getEmailFormValues()));
+document.getElementById("emailRecipients").addEventListener("input", () => updateEmailConfigUi(getEmailFormValues()));
+
+// ── CENTRAL DE DADOS UI ───────────────────────────────────────────────────────
+document.getElementById("saveSyncSettingsBtn").addEventListener("click", () => {
+  syncCfg = getSyncFormValues();
+  saveJSON(STORAGE_SYNC, syncCfg);
+  updateSyncConfigUi();
+  updateEmailConfigUi(emailCfg);
+  if (syncConfigured()) loadFromServer();
+  else setSyncStatus("Central de Dados não configurada — os dados ficam apenas neste computador.", "info");
 });
+document.getElementById("refreshDataBtn").addEventListener("click", () => loadFromServer());
+
+// Auto-refresh a cada 60s, pausado se algum modal estiver aberto
+setInterval(() => {
+  if (!syncConfigured()) return;
+  if (document.querySelector(".modal-backdrop.is-open")) return;
+  loadFromServer();
+}, 60000);
 
 // ── SEARCH / FILTER ───────────────────────────────────────────────────────────
 document.getElementById("toolSearch").addEventListener("input", renderToolList);
@@ -1246,6 +1372,7 @@ document.getElementById("importFile").addEventListener("change", e => {
       populateHistToolFilter();
       renderToolList();
       renderHistList();
+      syncBulkImport(tools, cycles);
       alert("Dados importados com sucesso.");
     } catch (err) {
       alert("Erro ao importar: "+(err.message||err));
@@ -1263,6 +1390,11 @@ function esc(s) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+applySyncFormFromCfg(syncCfg);
+updateSyncConfigUi();
+if (!syncConfigured()) setSyncStatus("Central de Dados não configurada — os dados ficam apenas neste computador.", "info");
+else setSyncStatus("Configuração carregada. Atualizando dados…", "info");
+
 applyEmailFormFromCfg(emailCfg);
 updateEmailConfigUi(emailCfg);
 if (!emailCfg.enabled) setEmailSendStatus("E-mails automáticos desativados.", "info");
@@ -1273,6 +1405,8 @@ else {
 }
 populateHistToolFilter();
 renderToolList();
+renderHistList();
+if (syncConfigured()) loadFromServer();
 </script>
 </body>
 </html>
