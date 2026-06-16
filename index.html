@@ -530,16 +530,10 @@
               <label for="sNomeSigProducao">Nome de quem assina *</label>
               <input id="sNomeSigProducao" type="text" placeholder="Nome completo" required>
             </div>
-            <div class="sig-date-local">
-              <div class="field">
+            <div class="field">
                 <label for="sDataSigProducao">Data</label>
                 <input id="sDataSigProducao" type="date">
               </div>
-              <div class="field">
-                <label for="sLocalSigProducao">Local</label>
-                <input id="sLocalSigProducao" type="text" placeholder="Ex.: São Paulo, SP">
-              </div>
-            </div>
           </div>
           <!-- Assinatura Qualidade -->
           <div class="signature-section">
@@ -548,18 +542,22 @@
               <label for="sNomeSigQualidade">Nome de quem assina *</label>
               <input id="sNomeSigQualidade" type="text" placeholder="Nome completo" required>
             </div>
-            <div class="sig-date-local">
-              <div class="field">
+            <div class="field">
                 <label for="sDataSigQualidade">Data</label>
                 <input id="sDataSigQualidade" type="date">
               </div>
-              <div class="field">
-                <label for="sLocalSigQualidade">Local</label>
-                <input id="sLocalSigQualidade" type="text" placeholder="Ex.: São Paulo, SP">
-              </div>
-            </div>
           </div>
         </div>
+      </div>
+
+      <!-- IMAGENS DE DEFEITOS -->
+      <div class="form-step">
+        <div class="step-header"><span class="step-number">5</span><h3 class="step-title">Imagens de Defeitos (opcional)</h3></div>
+        <div class="field">
+          <label for="sImagens">Selecione fotos dos defeitos encontrados</label>
+          <input type="file" id="sImagens" multiple accept="image/*" style="padding:6px 0;">
+        </div>
+        <div id="sImagensPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
       </div>
 
       <div class="form-actions">
@@ -576,6 +574,7 @@ const STORAGE_TOOLS = "pm-ferramentas-v2";
 const STORAGE_CYCLES = "pm-ciclos-v2";
 const STORAGE_EMAIL = "pm-email-v2";
 const STORAGE_SYNC = "pm-sync-v1";
+const STORAGE_IMAGES = "pm-imagens-v1";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 let tools = loadJSON(STORAGE_TOOLS, []);
@@ -589,6 +588,10 @@ function loadJSON(key, def) {
 }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 function saveAll() { saveJSON(STORAGE_TOOLS, tools); saveJSON(STORAGE_CYCLES, cycles); }
+
+function loadImagens(cycleId) { return loadJSON(STORAGE_IMAGES+":"+cycleId, []); }
+function saveImagens(cycleId, imgs) { saveJSON(STORAGE_IMAGES+":"+cycleId, imgs); }
+function deleteImagens(cycleId) { localStorage.removeItem(STORAGE_IMAGES+":"+cycleId); }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -819,8 +822,8 @@ function buildEmailBodyHtml(tool, cycle) {
 
     ${sectionTitle("Assinaturas")}
     ${table([
-      row("Produção", (cycle.nomeSigProducao||"—")+(cycle.dataSigProducao?" · "+fmtD(cycle.dataSigProducao):"")+(cycle.localSigProducao?" · "+cycle.localSigProducao:"")),
-      row("Qualidade", (cycle.nomeSigQualidade||"—")+(cycle.dataSigQualidade?" · "+fmtD(cycle.dataSigQualidade):"")+(cycle.localSigQualidade?" · "+cycle.localSigQualidade:"")),
+      row("Produção", (cycle.nomeSigProducao||"—")+(cycle.dataSigProducao?" · "+fmtD(cycle.dataSigProducao):"")),
+      row("Qualidade", (cycle.nomeSigQualidade||"—")+(cycle.dataSigQualidade?" · "+fmtD(cycle.dataSigQualidade):"")),
     ].join(""))}
   </div>
   <p style="text-align:center;font-size:11px;color:#9aa7ba;margin-top:12px;">E-mail gerado automaticamente pelo Histórico Ferramental — Pro metal</p>
@@ -854,10 +857,8 @@ function buildSheetRecord(tool, cycle) {
     cycle.respQualidade||"",
     cycle.nomeSigProducao||"",
     fmtD(cycle.dataSigProducao),
-    cycle.localSigProducao||"",
     cycle.nomeSigQualidade||"",
     fmtD(cycle.dataSigQualidade),
-    cycle.localSigQualidade||"",
   ];
 }
 
@@ -1099,8 +1100,7 @@ document.getElementById("formEntrada").addEventListener("submit", e => {
     parecerProducao: "", dataParecerProducao: "", respProducao: "",
     parecerQualidade: "", dataParecerQualidade: "", respQualidade: "",
     nomeSigProducao: "", nomeSigQualidade: "",
-    dataSigProducao: "", localSigProducao: "",
-    dataSigQualidade: "", localSigQualidade: "",
+    dataSigProducao: "", dataSigQualidade: "",
     liberado: false, emailEnviado: false, createdAt: new Date().toISOString()
   };
   cycles.push(cycle);
@@ -1127,10 +1127,10 @@ function openSaidaModal(toolId, cycleId) {
   document.getElementById("sResponsavelQualidade").value = "";
   document.getElementById("sNomeSigProducao").value = "";
   document.getElementById("sDataSigProducao").value = dateLocal(new Date());
-  document.getElementById("sLocalSigProducao").value = "";
   document.getElementById("sNomeSigQualidade").value = "";
   document.getElementById("sDataSigQualidade").value = dateLocal(new Date());
-  document.getElementById("sLocalSigQualidade").value = "";
+  document.getElementById("sImagens").value = "";
+  document.getElementById("sImagensPreview").innerHTML = "";
   document.getElementById("saidaEmailStatus").textContent = "";
 
   document.getElementById("saidaToolInfo").innerHTML =
@@ -1161,12 +1161,24 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
     respQualidade: document.getElementById("sResponsavelQualidade").value.trim(),
     nomeSigProducao: document.getElementById("sNomeSigProducao").value.trim(),
     dataSigProducao: document.getElementById("sDataSigProducao").value,
-    localSigProducao: document.getElementById("sLocalSigProducao").value.trim(),
     nomeSigQualidade: document.getElementById("sNomeSigQualidade").value.trim(),
     dataSigQualidade: document.getElementById("sDataSigQualidade").value,
-    localSigQualidade: document.getElementById("sLocalSigQualidade").value.trim(),
     closedAt: new Date().toISOString()
   });
+
+  // Salvar imagens de defeitos (base64, local por computador)
+  const files = Array.from(document.getElementById("sImagens").files || []);
+  if (files.length) {
+    const toBase64 = f => new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+    const existing = loadImagens(cycle.id);
+    const novas = await Promise.all(files.map(toBase64));
+    saveImagens(cycle.id, [...existing, ...novas]);
+  }
 
   saveAll();
   renderToolList();
@@ -1275,14 +1287,15 @@ function renderHistList() {
           <div class="sig-card">
             <span class="sig-label">Produção</span>
             <div class="sig-owner">${cycle.nomeSigProducao?"Assinado por "+esc(cycle.nomeSigProducao):"Assinatura pendente"}</div>
-            <div class="sig-meta">${[cycle.dataSigProducao?fmtD(cycle.dataSigProducao):"",cycle.localSigProducao||""].filter(Boolean).join(" · ")}</div>
+            <div class="sig-meta">${cycle.dataSigProducao?fmtD(cycle.dataSigProducao):""}</div>
           </div>
           <div class="sig-card">
             <span class="sig-label">Qualidade</span>
             <div class="sig-owner">${cycle.nomeSigQualidade?"Assinado por "+esc(cycle.nomeSigQualidade):"Assinatura pendente"}</div>
-            <div class="sig-meta">${[cycle.dataSigQualidade?fmtD(cycle.dataSigQualidade):"",cycle.localSigQualidade||""].filter(Boolean).join(" · ")}</div>
+            <div class="sig-meta">${cycle.dataSigQualidade?fmtD(cycle.dataSigQualidade):""}</div>
           </div>
         </div>
+        ${(()=>{const imgs=loadImagens(cycle.id);return imgs.length?`<div style="margin-top:10px;"><p class="helper" style="margin-bottom:6px;font-weight:600;">Imagens de Defeitos (${imgs.length})</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${imgs.map(src=>`<a href="${src}" target="_blank"><img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;"></a>`).join("")}</div></div>`:"";})()}
         <div class="toolbar-group">
           ${cycle.emailEnviado?'<span class="badge badge-concluido">E-mail enviado</span>':'<span class="badge badge-aguardando">E-mail pendente</span>'}
           ${cycle.liberado?'<span class="badge badge-disponivel">Ferramenta liberada</span>':`<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>`}
@@ -1303,6 +1316,7 @@ function renderHistList() {
       btn.addEventListener("click", () => {
         if (!confirm("Excluir este ciclo?")) return;
         cycles = cycles.filter(c=>c.id!==id);
+        deleteImagens(id);
         saveAll(); renderToolList(); renderHistList();
         syncDeleteCycle(id);
       });
@@ -1319,6 +1333,20 @@ function cycleStatus(cycle) {
   if (cycle.nomeSigProducao && cycle.nomeSigQualidade) return "Concluído";
   return "Aguardando Ferramentaria";
 }
+
+// ── IMAGENS DE DEFEITOS ───────────────────────────────────────────────────────
+document.getElementById("sImagens").addEventListener("change", e => {
+  const preview = document.getElementById("sImagensPreview");
+  preview.innerHTML = "";
+  Array.from(e.target.files).forEach(file => {
+    const img = document.createElement("img");
+    img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);";
+    const r = new FileReader();
+    r.onload = ev => { img.src = ev.target.result; };
+    r.readAsDataURL(file);
+    preview.appendChild(img);
+  });
+});
 
 // ── EMAIL SETTINGS UI ─────────────────────────────────────────────────────────
 document.getElementById("saveEmailSettingsBtn").addEventListener("click", () => {
