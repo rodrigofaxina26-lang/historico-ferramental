@@ -569,6 +569,11 @@
   </div>
 </div>
 
+<!-- LIGHTBOX de imagens -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:200;align-items:center;justify-content:center;cursor:zoom-out;" onclick="this.style.display='none'">
+  <img id="lightboxImg" style="max-width:94vw;max-height:92vh;border-radius:8px;box-shadow:0 4px 40px rgba(0,0,0,.6);">
+</div>
+
 <script>
 const STORAGE_TOOLS = "pm-ferramentas-v2";
 const STORAGE_CYCLES = "pm-ciclos-v2";
@@ -1295,7 +1300,7 @@ function renderHistList() {
             <div class="sig-meta">${cycle.dataSigQualidade?fmtD(cycle.dataSigQualidade):""}</div>
           </div>
         </div>
-        ${(()=>{const imgs=loadImagens(cycle.id);return imgs.length?`<div style="margin-top:10px;"><p class="helper" style="margin-bottom:6px;font-weight:600;">Imagens de Defeitos (${imgs.length})</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${imgs.map(src=>`<a href="${src}" target="_blank"><img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;"></a>`).join("")}</div></div>`:"";})()}
+        ${(()=>{const imgs=loadImagens(cycle.id);return imgs.length?`<div style="margin-top:10px;"><p class="helper" style="margin-bottom:6px;font-weight:600;">Imagens de Defeitos (${imgs.length})</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${imgs.map(src=>`<img src="${src}" onclick="openLightbox(this.src)" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in;">`).join("")}</div></div>`:"";})()}
         <div class="toolbar-group">
           ${cycle.emailEnviado?'<span class="badge badge-concluido">E-mail enviado</span>':'<span class="badge badge-aguardando">E-mail pendente</span>'}
           ${cycle.liberado?'<span class="badge badge-disponivel">Ferramenta liberada</span>':`<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>`}
@@ -1333,6 +1338,16 @@ function cycleStatus(cycle) {
   if (cycle.nomeSigProducao && cycle.nomeSigQualidade) return "Concluído";
   return "Aguardando Ferramentaria";
 }
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  const lb = document.getElementById("lightbox");
+  document.getElementById("lightboxImg").src = src;
+  lb.style.display = "flex";
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.getElementById("lightbox").style.display = "none";
+});
 
 // ── IMAGENS DE DEFEITOS ───────────────────────────────────────────────────────
 document.getElementById("sImagens").addEventListener("change", e => {
