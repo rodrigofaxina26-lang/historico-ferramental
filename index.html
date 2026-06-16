@@ -699,8 +699,16 @@ async function loadFromServer() {
   setSyncStatus("Atualizando…", "info");
   try {
     const data = await apiGet();
-    tools = Array.isArray(data.tools) ? data.tools : [];
-    cycles = Array.isArray(data.cycles) ? data.cycles : [];
+    const serverTools = Array.isArray(data.tools) ? data.tools : [];
+    const serverCycles = Array.isArray(data.cycles) ? data.cycles : [];
+    // Não sobrescreve dados locais se o servidor retornar vazio mas temos dados locais
+    // (evita apagar dados quando o script ainda não foi configurado corretamente)
+    if (serverTools.length === 0 && serverCycles.length === 0 && (tools.length > 0 || cycles.length > 0)) {
+      setSyncStatus("Servidor sem dados — mantendo dados locais. Verifique a configuração do script.", "warn");
+      return;
+    }
+    tools = serverTools;
+    cycles = serverCycles;
     saveAll();
     populateHistToolFilter();
     renderToolList();
