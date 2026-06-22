@@ -245,6 +245,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button type="button" class="btn btn-ghost btn-sm" id="saveSyncSettingsBtn">Salvar e sincronizar</button>
         <button type="button" class="btn btn-ghost btn-sm" id="refreshDataBtn">🔄 Atualizar dados</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="pushLocalDataBtn">⬆ Enviar dados locais para o servidor</button>
         <span class="helper" id="syncStatus">Central de Dados não configurada — os dados ficam apenas neste computador.</span>
       </div>
     </div>
@@ -1387,6 +1388,17 @@ document.getElementById("saveSyncSettingsBtn").addEventListener("click", () => {
   else setSyncStatus("Central de Dados não configurada — os dados ficam apenas neste computador.", "info");
 });
 document.getElementById("refreshDataBtn").addEventListener("click", () => loadFromServer());
+document.getElementById("pushLocalDataBtn").addEventListener("click", async () => {
+  if (!syncConfigured()) { setSyncStatus("Configure a Central de Dados antes de enviar.", "warn"); return; }
+  if (!confirm("Enviar todos os dados locais ("+tools.length+" ferramenta(s), "+cycles.length+" ciclo(s)) para o servidor? Os dados do servidor serão substituídos.")) return;
+  setSyncStatus("Enviando dados locais…", "info");
+  try {
+    await syncBulkImport(tools, cycles);
+    setSyncStatus("Dados locais enviados com sucesso para o servidor.", "ok");
+  } catch(err) {
+    setSyncStatus("Falha ao enviar: "+String(err.message||err), "danger");
+  }
+});
 
 // Auto-refresh a cada 60s, pausado se algum modal estiver aberto
 setInterval(() => {
