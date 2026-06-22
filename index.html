@@ -325,7 +325,7 @@
   <!-- ═══ TAB: HISTÓRICO ═══ -->
   <div class="tab-view" id="view-historico">
     <div class="toolbar" style="margin-bottom:18px;">
-      <div class="toolbar-group">
+      <div class="toolbar-group" style="flex-wrap:wrap;gap:8px;">
         <select id="histToolFilter" style="min-width:280px">
           <option value="">Todas as ferramentas</option>
         </select>
@@ -336,6 +336,9 @@
           <option value="Em Manutenção">Em Manutenção</option>
           <option value="Concluído">Concluído</option>
         </select>
+        <label style="font-size:0.8rem;display:flex;align-items:center;gap:4px;">De <input type="date" id="histDateFrom" style="font-size:0.8rem;padding:4px 6px;"></label>
+        <label style="font-size:0.8rem;display:flex;align-items:center;gap:4px;">Até <input type="date" id="histDateTo" style="font-size:0.8rem;padding:4px 6px;"></label>
+        <button type="button" class="btn btn-ghost btn-sm" id="histClearDates">Limpar datas</button>
       </div>
       <div class="toolbar-group">
         <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">Exportar JSON</button>
@@ -1240,15 +1243,28 @@ function populateHistToolFilter() {
 function renderHistList() {
   const toolId = document.getElementById("histToolFilter").value;
   const statusF = document.getElementById("histStatusFilter").value;
+  const dateFrom = document.getElementById("histDateFrom").value;
+  const dateTo = document.getElementById("histDateTo").value;
 
   let filtered = cycles.slice();
   if (toolId) filtered = filtered.filter(c=>c.toolId===toolId);
 
-  // Status filter
   if (statusF) {
+    filtered = filtered.filter(c => cycleStatus(c) === statusF);
+  }
+
+  if (dateFrom) {
+    const from = new Date(dateFrom+"T00:00:00");
     filtered = filtered.filter(c => {
-      const cs = cycleStatus(c);
-      return cs === statusF;
+      const d = new Date(c.entradaData || c.createdAt);
+      return d >= from;
+    });
+  }
+  if (dateTo) {
+    const to = new Date(dateTo+"T23:59:59");
+    filtered = filtered.filter(c => {
+      const d = new Date(c.entradaData || c.createdAt);
+      return d <= to;
     });
   }
 
@@ -1422,6 +1438,13 @@ setInterval(() => {
 document.getElementById("toolSearch").addEventListener("input", renderToolList);
 document.getElementById("histToolFilter").addEventListener("change", renderHistList);
 document.getElementById("histStatusFilter").addEventListener("change", renderHistList);
+document.getElementById("histDateFrom").addEventListener("change", renderHistList);
+document.getElementById("histDateTo").addEventListener("change", renderHistList);
+document.getElementById("histClearDates").addEventListener("click", () => {
+  document.getElementById("histDateFrom").value = "";
+  document.getElementById("histDateTo").value = "";
+  renderHistList();
+});
 document.getElementById("exportBtn").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify({tools,cycles},null,2)],{type:"application/json"});
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
