@@ -523,6 +523,14 @@
         </div>
       </div>
 
+      <!-- AJUSTE FERRAMENTARIA -->
+      <div class="form-step">
+        <label class="checkbox-inline" style="font-size:0.95rem;padding:10px 0;">
+          <input type="checkbox" id="sNecessitaAjuste">
+          <strong style="color:var(--danger);">🔧 Ferramenta necessita ajuste na ferramentaria</strong>
+        </label>
+      </div>
+
       <!-- ASSINATURAS -->
       <div class="form-step">
         <div class="step-header"><span class="step-number">4</span><h3 class="step-title">Assinaturas (obrigatórias para liberar e-mails)</h3></div>
@@ -831,6 +839,8 @@ function buildEmailBodyHtml(tool, cycle) {
     ${sectionTitle("Parecer da Qualidade ("+fmtD(cycle.dataParecerQualidade)+" — "+esc(cycle.respQualidade||"—")+")")}
     ${paragraph(cycle.parecerQualidade)}
 
+    ${cycle.necessitaAjuste?'<div style="background:#fde8e8;border:2px solid #b52a2a;border-radius:6px;padding:12px 16px;margin:12px 0;font-weight:700;color:#b52a2a;font-size:15px;">🔧 FERRAMENTA NECESSITA AJUSTE NA FERRAMENTARIA</div>':""}
+
     ${sectionTitle("Assinaturas")}
     ${table([
       row("Produção", (cycle.nomeSigProducao||"—")+(cycle.dataSigProducao?" · "+fmtD(cycle.dataSigProducao):"")),
@@ -964,6 +974,8 @@ function renderToolList() {
     const status = getToolCurrentStatus(tool);
     const tc = cycles.filter(c => c.toolId === tool.id);
     const openCycle = tc.find(c => !c.saidaData);
+    const lastCycle = tc.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0];
+    const ajuste = lastCycle && lastCycle.necessitaAjuste && !lastCycle.liberado;
 
     const el = document.createElement("div");
     el.className = "tool-card";
@@ -975,6 +987,7 @@ function renderToolList() {
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${statusBadgeClass(status)}">${esc(status)}</span>
+          ${ajuste?'<span class="badge badge-em-manutencao">🔧 Ajuste necessário</span>':""}
           <span class="helper">${tc.length} ciclo(s)</span>
         </div>
       </div>
@@ -1140,6 +1153,7 @@ function openSaidaModal(toolId, cycleId) {
   document.getElementById("sDataSigProducao").value = dateLocal(new Date());
   document.getElementById("sNomeSigQualidade").value = "";
   document.getElementById("sDataSigQualidade").value = dateLocal(new Date());
+  document.getElementById("sNecessitaAjuste").checked = false;
   document.getElementById("sImagens").value = "";
   document.getElementById("sImagensCamera").value = "";
   document.getElementById("sImagensPreview").innerHTML = "";
@@ -1171,6 +1185,7 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
     parecerQualidade: document.getElementById("sParecerQualidade").value.trim(),
     dataParecerQualidade: document.getElementById("sDataParecerQualidade").value,
     respQualidade: document.getElementById("sResponsavelQualidade").value.trim(),
+    necessitaAjuste: document.getElementById("sNecessitaAjuste").checked,
     nomeSigProducao: document.getElementById("sNomeSigProducao").value.trim(),
     dataSigProducao: document.getElementById("sDataSigProducao").value,
     nomeSigQualidade: document.getElementById("sNomeSigQualidade").value.trim(),
@@ -1325,6 +1340,7 @@ function renderHistList() {
         </div>
         ${(()=>{const imgs=loadImagens(cycle.id);return imgs.length?`<div style="margin-top:10px;"><p class="helper" style="margin-bottom:6px;font-weight:600;">Imagens de Defeitos (${imgs.length})</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${imgs.map(src=>`<img src="${src}" onclick="openLightbox(this.src)" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in;">`).join("")}</div></div>`:"";})()}
         <div class="toolbar-group">
+          ${cycle.necessitaAjuste?'<span class="badge badge-em-manutencao">🔧 Ajuste necessário</span>':""}
           ${cycle.emailEnviado?'<span class="badge badge-concluido">E-mail enviado</span>':'<span class="badge badge-aguardando">E-mail pendente</span>'}
           ${cycle.liberado?'<span class="badge badge-disponivel">Ferramenta liberada</span>':`<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>`}
           <button class="btn btn-ghost btn-sm" data-action="del-cycle" data-id="${cycle.id}">Excluir ciclo</button>
