@@ -930,7 +930,12 @@ function getToolCurrentStatus(tool) {
   return "Aguardando Ferramentaria";
 }
 
+const PIN_FERRAMENTARIA = "PROMETAL2026*";
+
 function liberarFerramenta(toolId) {
+  const pin = prompt("Apenas a Ferramentaria pode liberar a ferramenta.\nDigite o PIN:");
+  if (pin === null) return;
+  if (pin !== PIN_FERRAMENTARIA) { alert("PIN incorreto. Liberação cancelada."); return; }
   const tc = cycles.filter(c => c.toolId === toolId);
   if (!tc.length) return;
   const last = tc.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
