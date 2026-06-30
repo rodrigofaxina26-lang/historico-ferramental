@@ -280,6 +280,7 @@
   <div class="nav-tabs">
     <button class="nav-tab is-active" data-nav="ferramentas">Gestão de Ferramentas</button>
     <button class="nav-tab" data-nav="historico">Histórico de Uso</button>
+    <button class="nav-tab" data-nav="ajuste">🔧 Não OK <span class="status-inline" id="statAjusteTab" data-tone="warn">0</span></button>
   </div>
 
   <!-- ═══ TAB: FERRAMENTAS ═══ -->
@@ -352,6 +353,14 @@
     </div>
   </div>
 
+  <!-- ═══ TAB: NÃO OK (ajuste pendente) ═══ -->
+  <div class="tab-view" id="view-ajuste">
+    <p class="helper" style="margin-bottom:14px;">Ferramentas marcadas como "necessita ajuste" na última saída e que ainda não foram liberadas pela Ferramentaria.</p>
+    <div class="card-list" id="ajusteList">
+      <div class="empty-state">Nenhuma ferramenta precisando de ajuste no momento. ✅</div>
+    </div>
+  </div>
+
   <p style="margin-top:20px;text-align:center;font-size:0.8rem;color:var(--muted);">Pro metal · Histórico Ferramental · Dados salvos no navegador (localStorage)</p>
 </main>
 
@@ -406,6 +415,10 @@
               <option value="Em Produção">Em Produção</option>
               <option value="Em Manutenção">Em Manutenção</option>
             </select>
+          </div>
+          <div class="field">
+            <label for="fLimitePreventiva">Limite p/ Preventiva (peças acumuladas)</label>
+            <input id="fLimitePreventiva" type="number" min="0" placeholder="Ex.: 50000 (deixe vazio para não alertar)">
           </div>
         </div>
       </div>
@@ -479,8 +492,8 @@
             <input id="sQtdeProduzidas" type="number" min="0" placeholder="0">
           </div>
           <div class="field">
-            <label for="sQtdeAcumulada">Qtde. Peças Acumulada</label>
-            <input id="sQtdeAcumulada" type="number" min="0" placeholder="0">
+            <label for="sQtdeAcumulada">Qtde. Peças Acumulada (autosoma)</label>
+            <input id="sQtdeAcumulada" type="number" min="0" placeholder="0" readonly style="background:var(--bg-subtle,#f3f4f6);">
           </div>
         </div>
       </div>
@@ -578,6 +591,75 @@
         <button type="submit" class="btn btn-ok" id="saveSaidaBtn">Salvar saída e disparar e-mails</button>
         <button type="button" class="btn btn-ghost" data-close="modalSaida">Cancelar</button>
         <span class="helper" id="saidaEmailStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: LIBERAR FERRAMENTA ═══ -->
+<div class="modal-backdrop" id="modalLiberar">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Liberar Ferramenta — Ferramentaria</h2>
+      <button class="modal-close" data-close="modalLiberar">✕</button>
+    </div>
+    <p class="helper" id="liberarToolInfo" style="margin:0 0 16px;padding:8px 12px;background:var(--accent-light);border-radius:var(--radius-sm);">Ferramenta: —</p>
+    <form id="formLiberar">
+      <input type="hidden" id="lToolId">
+      <input type="hidden" id="lCycleId">
+      <div class="form-grid">
+        <div class="field field-full">
+          <label for="lPin">PIN da Ferramentaria *</label>
+          <input id="lPin" type="password" required placeholder="Digite o PIN">
+        </div>
+        <div class="field field-full">
+          <label for="lAjusteRealizado">O que foi feito (ajuste realizado) *</label>
+          <textarea id="lAjusteRealizado" required placeholder="Descreva o ajuste/manutenção realizado na ferramenta…"></textarea>
+        </div>
+        <div class="field field-full">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="lRessalva">
+            <strong style="color:var(--danger);">⚠ Liberar com ressalva</strong> (ferramenta não 100% corrigida, liberada por urgência/entrega)
+          </label>
+        </div>
+        <div class="field field-full" id="lJustificativaWrap" style="display:none;">
+          <label for="lJustificativaRessalva">Justificativa da ressalva *</label>
+          <textarea id="lJustificativaRessalva" placeholder="Explique por que está sendo liberada mesmo sem o ajuste completo…"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-ok" id="saveLiberarBtn">Confirmar liberação</button>
+        <button type="button" class="btn btn-ghost" data-close="modalLiberar">Cancelar</button>
+        <span class="helper" id="liberarStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: DIÁRIO DE BORDO ═══ -->
+<div class="modal-backdrop" id="modalDiario">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Diário de Bordo</h2>
+      <button class="modal-close" data-close="modalDiario">✕</button>
+    </div>
+    <p class="helper" id="diarioToolInfo" style="margin:0 0 16px;padding:8px 12px;background:var(--accent-light);border-radius:var(--radius-sm);">Ferramenta: —</p>
+    <div id="diarioList" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:16px;"></div>
+    <form id="formDiario">
+      <input type="hidden" id="dToolId">
+      <div class="form-grid g3">
+        <div class="field">
+          <label for="dAutor">Seu nome *</label>
+          <input id="dAutor" type="text" placeholder="Nome do ferramenteiro" required>
+        </div>
+        <div class="field field-full">
+          <label for="dTexto">Ocorrência / anotação *</label>
+          <textarea id="dTexto" placeholder="Descreva o que foi observado ou feito…" required></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-sm">+ Adicionar anotação</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-close="modalDiario">Fechar</button>
       </div>
     </form>
   </div>
@@ -886,10 +968,11 @@ function buildSheetRecord(tool, cycle) {
 async function sendEmails(tool, cycle) {
   const cfg = emailCfg;
   if (!cfg.enabled) return {status:"disabled"};
+  if (!cycle.necessitaAjuste) return {status:"skipped", message:"Ferramenta OK — e-mail não enviado (somente ferramentas que precisam de ajuste disparam e-mail)."};
   const msg = emailCfgValid(cfg);
   if (msg) return {status:"invalid", message:msg};
   const recipients = parseEmails(cfg.recipients);
-  const subject = "SAÍDA — "+tool.numFerramenta+" | "+tool.descProduto;
+  const subject = "🔧 AJUSTE NECESSÁRIO — "+tool.numFerramenta+" | "+tool.descProduto;
   const body = buildEmailBody(tool, cycle);
   const htmlBody = buildEmailBodyHtml(tool, cycle);
   const record = buildSheetRecord(tool, cycle);
@@ -916,6 +999,7 @@ document.querySelectorAll(".nav-tab").forEach(tab => {
     tab.classList.add("is-active");
     document.getElementById("view-"+tab.dataset.nav).classList.add("is-active");
     if (tab.dataset.nav === "historico") renderHistList();
+    if (tab.dataset.nav === "ajuste") renderAjusteList();
   });
 });
 
@@ -933,15 +1017,81 @@ function getToolCurrentStatus(tool) {
 const PIN_FERRAMENTARIA = "PROMETAL2026*";
 
 function liberarFerramenta(toolId) {
-  const pin = prompt("Apenas a Ferramentaria pode liberar a ferramenta.\nDigite o PIN:");
-  if (pin === null) return;
-  if (pin !== PIN_FERRAMENTARIA) { alert("PIN incorreto. Liberação cancelada."); return; }
   const tc = cycles.filter(c => c.toolId === toolId);
   if (!tc.length) return;
+  const tool = tools.find(t=>t.id===toolId);
   const last = tc.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
-  last.liberado = true;
+  document.getElementById("lToolId").value = toolId;
+  document.getElementById("lCycleId").value = last.id;
+  document.getElementById("lPin").value = "";
+  document.getElementById("lAjusteRealizado").value = "";
+  document.getElementById("lRessalva").checked = false;
+  document.getElementById("lJustificativaRessalva").value = "";
+  document.getElementById("lJustificativaWrap").style.display = "none";
+  document.getElementById("liberarStatus").textContent = "";
+  document.getElementById("liberarToolInfo").innerHTML =
+    `Ferramenta: <strong>${esc(tool?tool.numFerramenta:"")}</strong> — ${esc(tool?tool.descProduto:"")} · Ciclo Nº ${last.item}`;
+  openModal("modalLiberar");
+}
+
+document.getElementById("lRessalva").addEventListener("change", e => {
+  document.getElementById("lJustificativaWrap").style.display = e.target.checked ? "" : "none";
+  document.getElementById("lJustificativaRessalva").required = e.target.checked;
+});
+
+document.getElementById("formLiberar").addEventListener("submit", async e => {
+  e.preventDefault();
+  const toolId = document.getElementById("lToolId").value;
+  const cycleId = document.getElementById("lCycleId").value;
+  const cycle = cycles.find(c=>c.id===cycleId);
+  const tool = tools.find(t=>t.id===toolId);
+  if (!cycle || !tool) return;
+
+  const pin = document.getElementById("lPin").value;
+  if (pin !== PIN_FERRAMENTARIA) { alert("PIN incorreto. Liberação cancelada."); return; }
+
+  const ressalva = document.getElementById("lRessalva").checked;
+  const ajusteRealizado = document.getElementById("lAjusteRealizado").value.trim();
+  const justificativaRessalva = document.getElementById("lJustificativaRessalva").value.trim();
+  if (ressalva && !justificativaRessalva) { alert("Informe a justificativa da ressalva."); return; }
+
+  cycle.liberado = true;
+  cycle.ajusteRealizado = ajusteRealizado;
+  cycle.liberadoComRessalva = ressalva;
+  cycle.justificativaRessalva = ressalva ? justificativaRessalva : "";
+  cycle.liberadoEm = new Date().toISOString();
   saveAll(); renderToolList(); renderHistList();
-  syncUpsertCycle(last);
+  syncUpsertCycle(cycle);
+
+  const statusEl = document.getElementById("liberarStatus");
+  if (ressalva) {
+    statusEl.textContent = "Enviando alerta de ressalva…"; statusEl.dataset.tone = "info";
+    try {
+      await sendRessalvaEmail(tool, cycle);
+      statusEl.textContent = "Liberada com ressalva. Alerta enviado."; statusEl.dataset.tone = "ok";
+    } catch (err) {
+      statusEl.textContent = "Liberada, mas falha ao enviar alerta: "+String(err.message||err); statusEl.dataset.tone = "warn";
+    }
+  } else {
+    statusEl.textContent = "Ferramenta liberada com sucesso."; statusEl.dataset.tone = "ok";
+  }
+  setTimeout(() => closeModal("modalLiberar"), 1600);
+});
+
+async function sendRessalvaEmail(tool, cycle) {
+  const cfg = emailCfg;
+  if (!cfg.enabled || !syncConfigured()) return;
+  const recipients = parseEmails(cfg.recipients);
+  if (!recipients.length) return;
+  const subject = "⚠ LIBERADA COM RESSALVA — "+tool.numFerramenta+" | "+tool.descProduto;
+  const body = "Ferramenta "+tool.numFerramenta+" foi liberada com ressalva.\nJustificativa: "+cycle.justificativaRessalva+"\nAjuste realizado: "+cycle.ajusteRealizado;
+  const htmlBody = `<div style="font-family:Arial,sans-serif;">
+    <div style="background:#fde8e8;border:2px solid #b52a2a;border-radius:6px;padding:14px 18px;color:#b52a2a;font-weight:700;">⚠ FERRAMENTA LIBERADA COM RESSALVA</div>
+    <p><strong>Ferramenta:</strong> ${esc(tool.numFerramenta)} — ${esc(tool.descProduto)}</p>
+    <p><strong>Justificativa da ressalva:</strong><br>${esc(cycle.justificativaRessalva)}</p>
+    <p><strong>Ajuste realizado:</strong><br>${esc(cycle.ajusteRealizado)}</p>
+  </div>`;
+  await apiCall("sendEmail", { recipients, subject, body, htmlBody });
 }
 
 function statusBadgeClass(s) {
@@ -964,27 +1114,16 @@ function renderToolStats() {
 }
 
 // ── TOOL LIST ─────────────────────────────────────────────────────────────────
-function renderToolList() {
-  renderToolStats();
-  const term = (document.getElementById("toolSearch").value||"").trim().toLowerCase();
-  const list = document.getElementById("toolList");
-  const filtered = tools.filter(t => !term || [t.numFerramenta,t.codigoPrometal,t.cc,t.cliente,t.descOperacao,t.descProduto,t.codProdCliente,t.numOP].filter(Boolean).some(v=>v.toLowerCase().includes(term)));
+function buildToolCardHtml(tool) {
+  const status = getToolCurrentStatus(tool);
+  const tc = cycles.filter(c => c.toolId === tool.id);
+  const openCycle = tc.find(c => !c.saidaData);
+  const lastCycle = tc.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0];
+  const ajuste = lastCycle && lastCycle.necessitaAjuste && !lastCycle.liberado;
+  const ressalva = lastCycle && lastCycle.liberadoComRessalva;
+  const preventiva = precisaPreventiva(tool);
 
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty-state">Nenhuma ferramenta encontrada.</div>';
-    return;
-  }
-  list.innerHTML = "";
-  filtered.forEach(tool => {
-    const status = getToolCurrentStatus(tool);
-    const tc = cycles.filter(c => c.toolId === tool.id);
-    const openCycle = tc.find(c => !c.saidaData);
-    const lastCycle = tc.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0];
-    const ajuste = lastCycle && lastCycle.necessitaAjuste && !lastCycle.liberado;
-
-    const el = document.createElement("div");
-    el.className = "tool-card";
-    el.innerHTML = `
+  return `
       <div class="tool-head">
         <div class="tool-head-info">
           <h3>${esc(tool.numFerramenta)} ${tool.codigoPrometal ? "· "+esc(tool.codigoPrometal):""}</h3>
@@ -993,6 +1132,8 @@ function renderToolList() {
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="badge ${statusBadgeClass(status)}">${esc(status)}</span>
           ${ajuste?'<span class="badge badge-em-manutencao">🔧 Ajuste necessário</span>':""}
+          ${ressalva?'<span class="badge badge-alta">⚠ Liberada com ressalva</span>':""}
+          ${preventiva?'<span class="badge badge-media">⏱ Preventiva recomendada</span>':""}
           <span class="helper">${tc.length} ciclo(s)</span>
         </div>
       </div>
@@ -1011,14 +1152,15 @@ function renderToolList() {
       <div class="tool-foot">
         ${!openCycle ? `<button class="btn btn-primary btn-sm" data-action="entrada" data-id="${tool.id}">+ Registrar Entrada</button>` : `<button class="btn btn-ok btn-sm" data-action="saida" data-id="${tool.id}" data-cycle="${openCycle.id}">⬆ Registrar Saída</button>`}
         ${status==="Aguardando Ferramentaria" ? `<button class="btn btn-ok btn-sm" data-action="liberar" data-id="${tool.id}">✓ Liberar Ferramenta</button>` : ""}
+        <button class="btn btn-ghost btn-sm" data-action="diario" data-id="${tool.id}">📓 Diário de Bordo</button>
         <button class="btn btn-ghost btn-sm" data-action="ver-historico" data-id="${tool.id}">Ver histórico</button>
         <button class="btn btn-ghost btn-sm" data-action="edit-tool" data-id="${tool.id}">Editar</button>
         <button class="btn btn-danger btn-sm" data-action="del-tool" data-id="${tool.id}">Excluir</button>
       </div>
     `;
-    list.appendChild(el);
-  });
+}
 
+function wireToolCardActions(list) {
   list.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", () => {
       const action = btn.dataset.action, id = btn.dataset.id;
@@ -1028,9 +1170,99 @@ function renderToolList() {
       else if (action === "edit-tool") openEditToolModal(id);
       else if (action === "del-tool") deleteTool(id);
       else if (action === "ver-historico") goToHistorico(id);
+      else if (action === "diario") openDiarioModal(id);
     });
   });
 }
+
+function renderToolList() {
+  renderToolStats();
+  const term = (document.getElementById("toolSearch").value||"").trim().toLowerCase();
+  const list = document.getElementById("toolList");
+  const filtered = tools.filter(t => !term || [t.numFerramenta,t.codigoPrometal,t.cc,t.cliente,t.descOperacao,t.descProduto,t.codProdCliente,t.numOP].filter(Boolean).some(v=>v.toLowerCase().includes(term)));
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">Nenhuma ferramenta encontrada.</div>';
+  } else {
+    list.innerHTML = "";
+    filtered.forEach(tool => {
+      const el = document.createElement("div");
+      el.className = "tool-card";
+      el.innerHTML = buildToolCardHtml(tool);
+      list.appendChild(el);
+    });
+    wireToolCardActions(list);
+  }
+
+  renderAjusteList();
+}
+
+function renderAjusteList() {
+  const list = document.getElementById("ajusteList");
+  if (!list) return;
+  const filtered = tools.filter(tool => {
+    const tc = cycles.filter(c => c.toolId === tool.id);
+    const last = tc.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0];
+    return last && last.necessitaAjuste && !last.liberado;
+  });
+  document.getElementById("statAjusteTab").textContent = filtered.length;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">Nenhuma ferramenta precisando de ajuste no momento. ✅</div>';
+    return;
+  }
+  list.innerHTML = "";
+  filtered.forEach(tool => {
+    const el = document.createElement("div");
+    el.className = "tool-card";
+    el.innerHTML = buildToolCardHtml(tool);
+    list.appendChild(el);
+  });
+  wireToolCardActions(list);
+}
+
+// ── DIÁRIO DE BORDO ───────────────────────────────────────────────────────────
+function renderDiarioList(tool) {
+  const list = document.getElementById("diarioList");
+  const entries = (tool.diario||[]).slice().sort((a,b)=>new Date(b.data)-new Date(a.data));
+  if (!entries.length) {
+    list.innerHTML = '<p class="helper">Nenhuma anotação registrada ainda.</p>';
+    return;
+  }
+  list.innerHTML = entries.map(e => `
+    <div class="parecer-box prod">
+      <span class="parecer-label">${esc(e.autor)} — ${fmtDT(e.data)}</span>
+      ${esc(e.texto)}
+    </div>
+  `).join("");
+}
+
+function openDiarioModal(toolId) {
+  const tool = tools.find(t=>t.id===toolId); if (!tool) return;
+  document.getElementById("dToolId").value = toolId;
+  document.getElementById("dAutor").value = "";
+  document.getElementById("dTexto").value = "";
+  document.getElementById("diarioToolInfo").innerHTML = `Ferramenta: <strong>${esc(tool.numFerramenta)}</strong> — ${esc(tool.descProduto)||"—"}`;
+  renderDiarioList(tool);
+  openModal("modalDiario");
+}
+
+document.getElementById("formDiario").addEventListener("submit", e => {
+  e.preventDefault();
+  const toolId = document.getElementById("dToolId").value;
+  const tool = tools.find(t=>t.id===toolId); if (!tool) return;
+  const entry = {
+    autor: document.getElementById("dAutor").value.trim(),
+    texto: document.getElementById("dTexto").value.trim(),
+    data: new Date().toISOString()
+  };
+  tool.diario = tool.diario || [];
+  tool.diario.push(entry);
+  saveAll();
+  syncUpsertTool(tool);
+  document.getElementById("dTexto").value = "";
+  renderDiarioList(tool);
+});
 
 function goToHistorico(toolId) {
   document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("is-active"));
@@ -1072,6 +1304,7 @@ function openEditToolModal(id) {
   document.getElementById("fDescProduto").value = tool.descProduto||"";
   document.getElementById("fCodProdCliente").value = tool.codProdCliente||"";
   document.getElementById("fStatusFerramenta").value = tool.status||"Disponível";
+  document.getElementById("fLimitePreventiva").value = tool.limitePreventiva||"";
   openModal("modalTool");
 }
 
@@ -1087,7 +1320,8 @@ document.getElementById("formTool").addEventListener("submit", e => {
     numOP: document.getElementById("fNumOP").value.trim(),
     descProduto: document.getElementById("fDescProduto").value.trim(),
     codProdCliente: document.getElementById("fCodProdCliente").value.trim(),
-    status: document.getElementById("fStatusFerramenta").value
+    status: document.getElementById("fStatusFerramenta").value,
+    limitePreventiva: document.getElementById("fLimitePreventiva").value
   };
   let savedTool;
   if (editId) {
@@ -1137,17 +1371,38 @@ document.getElementById("formEntrada").addEventListener("submit", e => {
   syncUpsertCycle(cycle);
 });
 
+function getAcumuladoAnterior(toolId, excludeCycleId) {
+  const fechados = cycles.filter(c => c.toolId === toolId && c.id !== excludeCycleId && c.saidaData);
+  if (!fechados.length) return 0;
+  const last = fechados.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
+  return Number(last.qtdeAcumulada) || 0;
+}
+
+function getTotalAcumulado(toolId) {
+  return getAcumuladoAnterior(toolId, null);
+}
+
+function precisaPreventiva(tool) {
+  const limite = Number(tool.limitePreventiva) || 0;
+  if (!limite) return false;
+  return getTotalAcumulado(tool.id) >= limite;
+}
+
 // ── SAÍDA MODAL ───────────────────────────────────────────────────────────────
+let saidaAcumuladoAnterior = 0;
+
 function openSaidaModal(toolId, cycleId) {
   const tool = tools.find(t=>t.id===toolId);
   const cycle = cycles.find(c=>c.id===cycleId);
   if (!tool || !cycle) return;
 
+  saidaAcumuladoAnterior = getAcumuladoAnterior(toolId, cycleId);
+
   document.getElementById("sCycleId").value = cycleId;
   document.getElementById("sDataSaida").value = dtLocal(new Date());
   document.getElementById("sPreparadorSaida").value = "";
   document.getElementById("sQtdeProduzidas").value = "";
-  document.getElementById("sQtdeAcumulada").value = "";
+  document.getElementById("sQtdeAcumulada").value = saidaAcumuladoAnterior || "";
   document.getElementById("sParecerProducao").value = "";
   document.getElementById("sDataParecerProducao").value = dateLocal(new Date());
   document.getElementById("sResponsavelProducao").value = "";
@@ -1233,6 +1488,8 @@ document.getElementById("formSaida").addEventListener("submit", async e => {
       statusEl.textContent = result.count+" e-mail(s) enviado(s)."; statusEl.dataset.tone = "ok";
     } else if (result.status === "disabled") {
       statusEl.textContent = "Salvo. E-mails desativados."; statusEl.dataset.tone = "info";
+    } else if (result.status === "skipped") {
+      statusEl.textContent = "Salvo. "+result.message; statusEl.dataset.tone = "info";
     } else {
       statusEl.textContent = "Salvo, mas e-mails não enviados: "+result.message; statusEl.dataset.tone = "warn";
     }
@@ -1328,6 +1585,8 @@ function renderHistList() {
         </div>
         ${cycle.parecerProducao ? `<div class="parecer-box prod"><span class="parecer-label">Parecer da Produção — ${esc(cycle.respProducao)||"—"} · ${fmtD(cycle.dataParecerProducao)}</span>${esc(cycle.parecerProducao)}</div>` : ""}
         ${cycle.parecerQualidade ? `<div class="parecer-box qual"><span class="parecer-label">Parecer da Qualidade — ${esc(cycle.respQualidade)||"—"} · ${fmtD(cycle.dataParecerQualidade)}</span>${esc(cycle.parecerQualidade)}</div>` : ""}
+        ${cycle.ajusteRealizado ? `<div class="parecer-box prod"><span class="parecer-label">🔧 Ajuste realizado pela Ferramentaria — ${cycle.liberadoEm?fmtDT(cycle.liberadoEm):""}</span>${esc(cycle.ajusteRealizado)}</div>` : ""}
+        ${cycle.liberadoComRessalva ? `<div class="parecer-box qual" style="border-color:var(--danger);"><span class="parecer-label" style="color:var(--danger);">⚠ Justificativa da Ressalva</span>${esc(cycle.justificativaRessalva)}</div>` : ""}
       </div>
       ${cycle.saidaData ? `
       <div class="cycle-foot">
@@ -1408,6 +1667,11 @@ function adicionarImagensPreview(files) {
     preview.appendChild(img);
   });
 }
+
+document.getElementById("sQtdeProduzidas").addEventListener("input", e => {
+  const produzidas = Number(e.target.value) || 0;
+  document.getElementById("sQtdeAcumulada").value = saidaAcumuladoAnterior + produzidas;
+});
 
 document.getElementById("sImagens").addEventListener("change", e => adicionarImagensPreview(e.target.files));
 document.getElementById("sImagensCamera").addEventListener("change", e => adicionarImagensPreview(e.target.files));
