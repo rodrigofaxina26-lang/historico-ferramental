@@ -39,6 +39,13 @@ const TOKEN = ""; // defina um token secreto aqui (mesmo valor configurado no ap
 const SHEET_ID = ""; // ID da planilha Google Sheets (obrigatório para Central de Dados)
 const HIST_SHEET_NAME = "Histórico";
 
+// E-mails que recebem o resumo semanal de ferramentas precisando de ajuste
+// (função enviarResumoSemanal — requer um Acionador de tempo, veja final do arquivo)
+const RESUMO_SEMANAL_DESTINATARIOS = [
+  // "qualidade@empresa.com",
+  // "ferramentaria@empresa.com",
+];
+
 const HIST_HEADERS = [
   "Data/Hora Saída", "Nº Ferramenta", "Código PROMETAL", "C.C.", "Cliente",
   "Descrição da Operação", "Nº OP.", "Descrição do Produto", "Cód. Prod. Cliente",
@@ -253,6 +260,73 @@ function appendToHistSheet(record) {
     sheet.appendRow(HIST_HEADERS);
   }
   sheet.appendRow(record);
+}
+
+// ── RESUMO SEMANAL ───────────────────────────────────────────────────────────
+//
+// Envia um e-mail listando todas as ferramentas que estão com "necessita
+// ajuste" marcado e ainda não foram liberadas pela Ferramentaria.
+//
+// COMO ATIVAR (uma vez só):
+// 1. Preencha RESUMO_SEMANAL_DESTINATARIOS no topo deste arquivo com os
+//    e-mails que devem receber o resumo.
+// 2. No editor do Apps Script, clique no ícone de relógio "Acionadores"
+//    (menu lateral esquerdo).
+// 3. Clique em "+ Adicionar acionador".
+//    - Função a ser executada: enviarResumoSemanal
+//    - Origem do evento: Baseado em tempo
+//    - Tipo de acionador baseado em tempo: Timer semanal
+//    - Selecione o dia da semana e o horário (ex: toda segunda, 08h)
+// 4. Salvar. Autorize as permissões se solicitado.
+
+function enviarResumoSemanal() {
+  if (!SHEET_ID || !RESUMO_SEMANAL_DESTINATARIOS.length) return;
+
+  const allTools = readRecords("Ferramentas");
+  const allCycles = readRecords("Ciclos");
+
+  const pendentes = [];
+  allTools.forEach(function (tool) {
+    const tc = allCycles.filter(function (c) { return c.toolId === tool.id; });
+    if (!tc.length) return;
+    const last = tc.slice().sort(function (a, b) {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    })[0];
+    if (last.necessitaAjuste && !last.liberado) {
+      pendentes.push({ tool: tool, cycle: last });
+    }
+  });
+
+  if (!pendentes.length) return; // nada pendente, não envia e-mail
+
+  const tz = Session.getScriptTimeZone();
+  const linhas = pendentes.map(function (p) {
+    const saida = p.cycle.saidaData ? Utilities.formatDate(new Date(p.cycle.saidaData), tz, "dd/MM/yyyy") : "—";
+    return "<tr>" +
+      "<td style='padding:8px;border:1px solid #ddd;'>" + (p.tool.numFerramenta || "") + "</td>" +
+      "<td style='padding:8px;border:1px solid #ddd;'>" + (p.tool.descProduto || "") + "</td>" +
+      "<td style='padding:8px;border:1px solid #ddd;'>" + (p.tool.cliente || "") + "</td>" +
+      "<td style='padding:8px;border:1px solid #ddd;'>" + saida + "</td>" +
+      "<td style='padding:8px;border:1px solid #ddd;'>" + (p.cycle.parecerQualidade || "") + "</td>" +
+      "</tr>";
+  }).join("");
+
+  const subject = "🔧 Resumo Semanal — " + pendentes.length + " ferramenta(s) precisando de ajuste";
+  const htmlBody = "<div style='font-family:Arial,sans-serif;'>" +
+    "<h2 style='color:#b52a2a;'>🔧 Ferramentas precisando de ajuste</h2>" +
+    "<p>" + pendentes.length + " ferramenta(s) aguardando ajuste na Ferramentaria.</p>" +
+    "<table style='border-collapse:collapse;width:100%;'>" +
+    "<tr style='background:#f3f4f6;'>" +
+    "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Ferramenta</th>" +
+    "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Produto</th>" +
+    "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Cliente</th>" +
+    "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Saída</th>" +
+    "<th style='padding:8px;border:1px solid #ddd;text-align:left;'>Parecer Qualidade</th>" +
+    "</tr>" + linhas + "</table></div>";
+
+  RESUMO_SEMANAL_DESTINATARIOS.forEach(function (to) {
+    MailApp.sendEmail({ to: to, subject: subject, htmlBody: htmlBody });
+  });
 }
 
 // ── UTIL ──────────────────────────────────────────────────────────────────────
