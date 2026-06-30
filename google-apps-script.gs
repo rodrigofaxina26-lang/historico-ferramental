@@ -42,8 +42,12 @@ const HIST_SHEET_NAME = "Histórico";
 // E-mails que recebem o resumo semanal de ferramentas precisando de ajuste
 // (função enviarResumoSemanal — requer um Acionador de tempo, veja final do arquivo)
 const RESUMO_SEMANAL_DESTINATARIOS = [
-  // "qualidade@empresa.com",
-  // "ferramentaria@empresa.com",
+  "rodrigo.faxina@prometal.com.br",
+  "marcelo.martinez@prometal.com.br",
+  "alessandro.felipe@prometal.com.br",
+  "carlos.ferreira@prometal.com.br",
+  "luis.fernando@prometal.com.br",
+  "fernando.monteiro@prometal.com.br",
 ];
 
 const HIST_HEADERS = [
