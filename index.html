@@ -246,6 +246,7 @@
         <button type="button" class="btn btn-ghost btn-sm" id="saveSyncSettingsBtn">Salvar e sincronizar</button>
         <button type="button" class="btn btn-ghost btn-sm" id="refreshDataBtn">🔄 Atualizar dados</button>
         <button type="button" class="btn btn-ghost btn-sm" id="pushLocalDataBtn">⬆ Enviar dados locais para o servidor</button>
+        <button type="button" class="btn btn-danger btn-sm" id="clearLocalDataBtn">🗑 Limpar cache local</button>
         <span class="helper" id="syncStatus">Central de Dados não configurada — os dados ficam apenas neste computador.</span>
       </div>
     </div>
@@ -1724,6 +1725,18 @@ document.getElementById("pushLocalDataBtn").addEventListener("click", async () =
   } catch(err) {
     setSyncStatus("Falha ao enviar: "+String(err.message||err), "danger");
   }
+});
+
+document.getElementById("clearLocalDataBtn").addEventListener("click", () => {
+  if (!confirm("Limpar todos os dados locais deste computador e recarregar do servidor?\n\nIsso NÃO apaga dados do servidor — apenas limpa o cache local.")) return;
+  localStorage.removeItem("pm-tools-v1");
+  localStorage.removeItem("pm-cycles-v1");
+  tools = []; cycles = [];
+  saveAll();
+  renderToolList();
+  renderHistList();
+  if (syncConfigured()) loadFromServer();
+  else setSyncStatus("Cache local limpo.", "ok");
 });
 
 // Auto-refresh a cada 60s, pausado se algum modal estiver aberto
