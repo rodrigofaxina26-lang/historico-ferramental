@@ -417,8 +417,17 @@
             </select>
           </div>
           <div class="field">
-            <label for="fLimitePreventiva">Limite p/ Preventiva (peças acumuladas)</label>
-            <input id="fLimitePreventiva" type="number" min="0" placeholder="Ex.: 50000 (deixe vazio para não alertar)">
+            <label>Limites p/ Preventiva (peças acumuladas)</label>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;">
+                <label for="fLimitePreventivaMin" style="font-size:0.78rem;color:var(--c-text-2);margin-bottom:2px;display:block;">Mínimo — alerta antecipado</label>
+                <input id="fLimitePreventivaMin" type="number" min="0" placeholder="Ex.: 45000" style="width:100%;">
+              </div>
+              <div style="flex:1;">
+                <label for="fLimitePreventivaMax" style="font-size:0.78rem;color:var(--c-text-2);margin-bottom:2px;display:block;">Máximo — preventiva urgente</label>
+                <input id="fLimitePreventivaMax" type="number" min="0" placeholder="Ex.: 50000" style="width:100%;">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1133,7 +1142,7 @@ function buildToolCardHtml(tool) {
           <span class="badge ${statusBadgeClass(status)}">${esc(status)}</span>
           ${ajuste?'<span class="badge badge-em-manutencao">🔧 Ajuste necessário</span>':""}
           ${ressalva?'<span class="badge badge-alta">⚠ Liberada com ressalva</span>':""}
-          ${preventiva?'<span class="badge badge-media">⏱ Preventiva recomendada</span>':""}
+          ${preventiva==="urgente"?'<span class="badge badge-em-manutencao">🛑 Preventiva urgente</span>':preventiva==="proximo"?'<span class="badge badge-media">⚠ Preventiva próxima</span>':""}
           <span class="helper">${tc.length} ciclo(s)</span>
         </div>
       </div>
@@ -1304,7 +1313,8 @@ function openEditToolModal(id) {
   document.getElementById("fDescProduto").value = tool.descProduto||"";
   document.getElementById("fCodProdCliente").value = tool.codProdCliente||"";
   document.getElementById("fStatusFerramenta").value = tool.status||"Disponível";
-  document.getElementById("fLimitePreventiva").value = tool.limitePreventiva||"";
+  document.getElementById("fLimitePreventivaMin").value = tool.limitePreventivaMin||"";
+  document.getElementById("fLimitePreventivaMax").value = tool.limitePreventivaMax||tool.limitePreventiva||"";
   openModal("modalTool");
 }
 
@@ -1321,7 +1331,8 @@ document.getElementById("formTool").addEventListener("submit", e => {
     descProduto: document.getElementById("fDescProduto").value.trim(),
     codProdCliente: document.getElementById("fCodProdCliente").value.trim(),
     status: document.getElementById("fStatusFerramenta").value,
-    limitePreventiva: document.getElementById("fLimitePreventiva").value
+    limitePreventivaMin: document.getElementById("fLimitePreventivaMin").value,
+    limitePreventivaMax: document.getElementById("fLimitePreventivaMax").value
   };
   let savedTool;
   if (editId) {
@@ -1383,9 +1394,12 @@ function getTotalAcumulado(toolId) {
 }
 
 function precisaPreventiva(tool) {
-  const limite = Number(tool.limitePreventiva) || 0;
-  if (!limite) return false;
-  return getTotalAcumulado(tool.id) >= limite;
+  const max = Number(tool.limitePreventivaMax) || Number(tool.limitePreventiva) || 0;
+  const min = Number(tool.limitePreventivaMin) || 0;
+  const acum = getTotalAcumulado(tool.id);
+  if (max && acum >= max) return "urgente";
+  if (min && acum >= min) return "proximo";
+  return false;
 }
 
 // ── SAÍDA MODAL ───────────────────────────────────────────────────────────────
