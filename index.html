@@ -430,6 +430,10 @@
               </div>
             </div>
           </div>
+          <div class="field" id="fPreventivaLockRow" style="display:none;">
+            <label for="fPreventivaPin">🔒 Senha para alterar limites de preventiva</label>
+            <input id="fPreventivaPin" type="password" placeholder="Digite a senha" autocomplete="off">
+          </div>
         </div>
       </div>
       <div class="form-actions">
@@ -1025,6 +1029,7 @@ function getToolCurrentStatus(tool) {
 }
 
 const PIN_FERRAMENTARIA = "PROMETAL2026*";
+const PIN_PREVENTIVA = "PROMETAL2026*";
 
 function liberarFerramenta(toolId) {
   const tc = cycles.filter(c => c.toolId === toolId);
@@ -1298,6 +1303,9 @@ document.getElementById("openNewToolBtn").addEventListener("click", () => {
   document.getElementById("modalToolTitle").textContent = "Nova Ferramenta";
   document.getElementById("fToolId").value = "";
   document.getElementById("formTool").reset();
+  document.getElementById("fPreventivaPin").value = "";
+  document.getElementById("fPreventivaLockRow").style.display = "none";
+  _preventivaOrigMin = ""; _preventivaOrigMax = "";
   openModal("modalTool");
 });
 
@@ -1314,14 +1322,43 @@ function openEditToolModal(id) {
   document.getElementById("fDescProduto").value = tool.descProduto||"";
   document.getElementById("fCodProdCliente").value = tool.codProdCliente||"";
   document.getElementById("fStatusFerramenta").value = tool.status||"Disponível";
-  document.getElementById("fLimitePreventivaMin").value = tool.limitePreventivaMin||"";
-  document.getElementById("fLimitePreventivaMax").value = tool.limitePreventivaMax||tool.limitePreventiva||"";
+  _preventivaOrigMin = tool.limitePreventivaMin||"";
+  _preventivaOrigMax = tool.limitePreventivaMax||tool.limitePreventiva||"";
+  document.getElementById("fLimitePreventivaMin").value = _preventivaOrigMin;
+  document.getElementById("fLimitePreventivaMax").value = _preventivaOrigMax;
+  document.getElementById("fPreventivaPin").value = "";
+  document.getElementById("fPreventivaLockRow").style.display = "none";
   openModal("modalTool");
 }
+
+let _preventivaOrigMin = "", _preventivaOrigMax = "";
+["fLimitePreventivaMin","fLimitePreventivaMax"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    const editId = document.getElementById("fToolId").value;
+    if (!editId) return; // novo cadastro não precisa de senha
+    const min = document.getElementById("fLimitePreventivaMin").value;
+    const max = document.getElementById("fLimitePreventivaMax").value;
+    const changed = min !== _preventivaOrigMin || max !== _preventivaOrigMax;
+    document.getElementById("fPreventivaLockRow").style.display = changed ? "" : "none";
+    if (!changed) document.getElementById("fPreventivaPin").value = "";
+  });
+});
 
 document.getElementById("formTool").addEventListener("submit", e => {
   e.preventDefault();
   const editId = document.getElementById("fToolId").value;
+  const newMin = document.getElementById("fLimitePreventivaMin").value;
+  const newMax = document.getElementById("fLimitePreventivaMax").value;
+  if (editId && (newMin !== _preventivaOrigMin || newMax !== _preventivaOrigMax)) {
+    if (document.getElementById("fPreventivaPin").value !== PIN_PREVENTIVA) {
+      alert("Senha incorreta. Os limites de preventiva não foram alterados.");
+      document.getElementById("fLimitePreventivaMin").value = _preventivaOrigMin;
+      document.getElementById("fLimitePreventivaMax").value = _preventivaOrigMax;
+      document.getElementById("fPreventivaPin").value = "";
+      document.getElementById("fPreventivaLockRow").style.display = "none";
+      return;
+    }
+  }
   const data = {
     numFerramenta: document.getElementById("fNumFerramenta").value.trim(),
     cc: document.getElementById("fCC").value.trim(),
